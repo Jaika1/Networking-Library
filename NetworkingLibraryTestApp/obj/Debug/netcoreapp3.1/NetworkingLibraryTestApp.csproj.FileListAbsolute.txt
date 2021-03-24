@@ -1,0 +1,14 @@
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryTestApp.exe
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryTestApp.deps.json
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryTestApp.runtimeconfig.json
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryTestApp.runtimeconfig.dev.json
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryTestApp.dll
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryTestApp.pdb
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibrary.dll
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibrary.pdb
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.csprojAssemblyReference.cache
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.AssemblyInfoInputs.cache
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.AssemblyInfo.cs
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.csproj.CopyComplete
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.dll
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.pdb

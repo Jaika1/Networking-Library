@@ -51,5 +51,15 @@ namespace NetworkingLibrary
                 return ms.ToArray();
             }
         }
+
+        public static object ByteArrayToObject(byte[] data)
+        {
+            using (MemoryStream ms = new MemoryStream(data))
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                object o = bf.Deserialize(ms);
+                return o;
+            }
+        }
     }
 }
