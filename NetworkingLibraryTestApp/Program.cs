@@ -15,18 +15,15 @@ namespace NetworkingLibraryTestApp
         static void Main(string[] args)
         {
             UdpServer udpSv = new UdpServer();
-            udpSv.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
+            udpSv.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1);
             udpSv.StartServer(7235);
 
             UdpClient udpCl = new UdpClient();
+            udpCl.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1);
             udpCl.VerifyAndListen(new IPEndPoint(IPAddress.Loopback, 7235));
-            udpCl.Send(0);
-            udpCl.Send(1, new byte[] { 2, 4, 6, 8 });
-
             DynamicPacket dp = new DynamicPacket();
-            dp.AddData(new byte[] { 4, 8, 16, 32 });
-            dp.AddData("Nice");
-            udpCl.Send(2, dp);
+            dp.AddData(0);
+            udpCl.Send(0, dp);
 
             Thread.Sleep(-1);
         }

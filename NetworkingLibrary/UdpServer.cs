@@ -16,7 +16,7 @@ namespace NetworkingLibrary
         private int bufferSize;
         private byte[] dataBuffer;
 
-        public UdpServer(int bufferSize = 1024, uint secret = 0) : base(SocketConfiguration.UdpConfiguration, secret)
+        public UdpServer(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret)
         {
             this.bufferSize = bufferSize;
         }
@@ -52,9 +52,13 @@ namespace NetworkingLibrary
             UdpClient clientRef = clientList.Find(c => c.EndPoint.Equals(clientEndPoint));
             if (clientRef == null)
             {
-                // Proper verification using the secret later.
+                if (data.Length != 4 || BitConverter.ToUInt32(data) != Secret) 
+                {
+                    Debug.WriteLine($"Client attempted to connect from {clientEndPoint} with a bad secret.");
+                    return;
+                }
                 UdpClient rCl = new UdpClient(socket, clientEndPoint);
-                rCl.Send(0, new byte[] { 1 });
+                rCl.SendRaw(0, BitConverter.GetBytes(Secret));
                 clientList.Add(rCl);
             }
             else

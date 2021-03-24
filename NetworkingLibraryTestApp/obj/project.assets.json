@@ -27,23 +27,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Jaika\\.nuget\\packages\\": {},
-    "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
+    "C:\\Users\\s200099\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\AIE Year 2\\Networking Library\\Networking Library\\NetworkingLibraryTestApp\\NetworkingLibraryTestApp.csproj",
+      "projectUniqueName": "C:\\Users\\s200099\\Documents\\Networking-Library\\NetworkingLibraryTestApp\\NetworkingLibraryTestApp.csproj",
       "projectName": "NetworkingLibraryTestApp",
-      "projectPath": "D:\\AIE Year 2\\Networking Library\\Networking Library\\NetworkingLibraryTestApp\\NetworkingLibraryTestApp.csproj",
-      "packagesPath": "C:\\Users\\Jaika\\.nuget\\packages\\",
-      "outputPath": "D:\\AIE Year 2\\Networking Library\\Networking Library\\NetworkingLibraryTestApp\\obj\\",
+      "projectPath": "C:\\Users\\s200099\\Documents\\Networking-Library\\NetworkingLibraryTestApp\\NetworkingLibraryTestApp.csproj",
+      "packagesPath": "C:\\Users\\s200099\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\s200099\\Documents\\Networking-Library\\NetworkingLibraryTestApp\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-      ],
       "configFilePaths": [
-        "C:\\Users\\Jaika\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\s200099\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -55,10 +51,9 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
-          "targetAlias": "netcoreapp3.1",
           "projectReferences": {
-            "D:\\AIE Year 2\\Networking Library\\Networking Library\\NetworkingLibrary\\NetworkingLibrary.csproj": {
-              "projectPath": "D:\\AIE Year 2\\Networking Library\\Networking Library\\NetworkingLibrary\\NetworkingLibrary.csproj"
+            "C:\\Users\\s200099\\Documents\\Networking-Library\\NetworkingLibrary\\NetworkingLibrary.csproj": {
+              "projectPath": "C:\\Users\\s200099\\Documents\\Networking-Library\\NetworkingLibrary\\NetworkingLibrary.csproj"
             }
           }
         }
@@ -71,7 +66,6 @@
     },
     "frameworks": {
       "netcoreapp3.1": {
-        "targetAlias": "netcoreapp3.1",
         "imports": [
           "net461",
           "net462",
@@ -87,7 +81,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.201\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.101\\RuntimeIdentifierGraph.json"
       }
     }
   }

@@ -56,7 +56,7 @@ namespace NetworkingLibrary
                                                      where m.GetCustomAttribute<NetDataEventAttribute>() != null
                                                      where m.GetCustomAttribute<NetDataEventAttribute>().EventGroupIdentifier == eventGroupIdentifier
                                                      where m.GetParameters().Length > 0
-                                                     where m.GetParameters()[0].ParameterType == typeof(NetBase)
+                                                     where m.GetParameters()[0].ParameterType == typeof(NetBase) || m.GetParameters()[0].ParameterType.BaseType == typeof(NetBase)
                                                      select m).ToList();
 
             for(int i = 0; i < netEventGroupMethods.Count; ++i)

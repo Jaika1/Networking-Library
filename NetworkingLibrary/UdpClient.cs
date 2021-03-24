@@ -15,7 +15,7 @@ namespace NetworkingLibrary
         private byte[] dataBuffer;
 
 
-        public UdpClient(int bufferSize = 1024, uint secret = 0) : base(SocketConfiguration.UdpConfiguration, secret)
+        public UdpClient(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret)
         {
             this.bufferSize = bufferSize;
         }
@@ -33,7 +33,7 @@ namespace NetworkingLibrary
             byte[] verification = BitConverter.GetBytes(Secret);
             socket.SendTo(verification, 0, verification.Length, SocketFlags.None, endPoint);
 
-            byte[] response = new byte[4];
+            byte[] response = new byte[7];
             try
             {
                 socket.ReceiveFrom(response, 0, response.Length, SocketFlags.None, ref endPoint);
@@ -44,7 +44,11 @@ namespace NetworkingLibrary
                 return false;
             }
 
-            // Verification confirm here
+            if (BitConverter.ToUInt32(response.Skip(3).ToArray()) != Secret)
+            {
+                Debug.WriteLine("Verification response was incorrect!");
+                return false;
+            }
 
             dataBuffer = new byte[bufferSize];
             socket.BeginReceiveFrom(dataBuffer, 0, dataBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(DataReceivedEvent), null);
