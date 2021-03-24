@@ -6,3 +6,12 @@ C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\Debug\netcor
 C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\Debug\netcoreapp3.1\NetworkingLibrary.AssemblyInfo.cs
 C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\Debug\netcoreapp3.1\NetworkingLibrary.dll
 C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\Debug\netcoreapp3.1\NetworkingLibrary.pdb
+D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibrary\bin\Debug\netcoreapp3.1\NetworkingLibrary.deps.json
+D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibrary\bin\Debug\netcoreapp3.1\NetworkingLibrary.dll
+D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibrary\bin\Debug\netcoreapp3.1\NetworkingLibrary.pdb
+D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibrary\obj\Debug\netcoreapp3.1\NetworkingLibrary.csprojAssemblyReference.cache
+D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibrary\obj\Debug\netcoreapp3.1\NetworkingLibrary.AssemblyInfoInputs.cache
+D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibrary\obj\Debug\netcoreapp3.1\NetworkingLibrary.AssemblyInfo.cs
+D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibrary\obj\Debug\netcoreapp3.1\NetworkingLibrary.csproj.CoreCompileInputs.cache
+D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibrary\obj\Debug\netcoreapp3.1\NetworkingLibrary.dll
+D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibrary\obj\Debug\netcoreapp3.1\NetworkingLibrary.pdb

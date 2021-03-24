@@ -1,11 +1,11 @@
 ﻿using NetworkingLibrary.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NetworkingLibrary
@@ -40,7 +40,7 @@ namespace NetworkingLibrary
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Debug.WriteLine(ex.ToString());
             }
 
             dataBuffer = new byte[bufferSize];
@@ -53,7 +53,9 @@ namespace NetworkingLibrary
             if (clientRef == null)
             {
                 // Proper verification using the secret later.
-                clientList.Add(new UdpClient(socket, clientEndPoint));
+                UdpClient rCl = new UdpClient(socket, clientEndPoint);
+                rCl.Send(0, new byte[] { 1 });
+                clientList.Add(rCl);
             }
             else
             {
@@ -91,6 +93,14 @@ namespace NetworkingLibrary
                         netEventMethod.Invoke(null, objects);
                     }
                 }
+            }
+        }
+
+        internal override void SendRaw(byte packetId, byte[] rawData)
+        {
+            for (int i = 0; i < clientList.Count; ++i)
+            {
+                clientList[i].SendRaw(packetId, rawData);
             }
         }
     }

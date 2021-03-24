@@ -28,6 +28,7 @@ namespace NetworkingLibrary
             this.secret = secret;
             socketConfiguration = socketConfig;
             socket = new Socket(socketConfig.AddressFamily, socketConfig.SocketType, socketConfig.ProtocolType);
+            socket.ReceiveTimeout = 10000;
         }
 
 
@@ -74,7 +75,13 @@ namespace NetworkingLibrary
         }
 
 
-        public virtual void Send(byte packetId, byte[] rawData)
+        public void Send(byte packetId) => SendRaw(packetId, new byte[0]);
+
+        public void Send(byte packetId, byte[] data) => SendRaw(packetId, DynamicPacket.ObjectToByteArray(data));
+
+        public void Send(byte packetId, DynamicPacket packet) => SendRaw(packetId, packet.GetRawData());
+
+        internal virtual void SendRaw(byte packetId, byte[] rawData)
             => throw new NotImplementedException("The inheriting class did not override this method! This is most certainly an oversight by the developer who created the inheriting class.");
     }
 }
