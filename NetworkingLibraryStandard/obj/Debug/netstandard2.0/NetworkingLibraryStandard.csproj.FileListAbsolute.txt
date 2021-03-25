@@ -1,0 +1,8 @@
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryStandard\bin\Debug\netstandard2.0\NetworkingLibraryStandard.deps.json
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryStandard\bin\Debug\netstandard2.0\NetworkingLibraryStandard.dll
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryStandard\bin\Debug\netstandard2.0\NetworkingLibraryStandard.pdb
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryStandard\obj\Debug\netstandard2.0\NetworkingLibraryStandard.csprojAssemblyReference.cache
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryStandard\obj\Debug\netstandard2.0\NetworkingLibraryStandard.AssemblyInfoInputs.cache
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryStandard\obj\Debug\netstandard2.0\NetworkingLibraryStandard.AssemblyInfo.cs
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryStandard\obj\Debug\netstandard2.0\NetworkingLibraryStandard.dll
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryStandard\obj\Debug\netstandard2.0\NetworkingLibraryStandard.pdb

@@ -14,13 +14,13 @@ namespace NetworkingLibraryTestApp
     {
         static void Main(string[] args)
         {
-            UdpServer udpSv = new UdpServer();
-            udpSv.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1);
-            udpSv.StartServer(7235);
+            //UdpServer udpSv = new UdpServer();
+            //udpSv.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1);
+            //udpSv.StartServer(7235);
 
             UdpClient udpCl = new UdpClient();
             udpCl.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1);
-            udpCl.VerifyAndListen(new IPEndPoint(IPAddress.Loopback, 7235));
+            udpCl.VerifyAndListen(new IPEndPoint(IPAddress.Parse("49.188.59.93"), 7235));
             DynamicPacket dp = new DynamicPacket();
             dp.AddData(0);
             udpCl.Send(0, dp);
