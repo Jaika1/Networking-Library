@@ -4,8 +4,6 @@ C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug
 C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryTestApp.runtimeconfig.dev.json
 C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryTestApp.dll
 C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryTestApp.pdb
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibrary.dll
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibrary.pdb
 C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.csprojAssemblyReference.cache
 C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.AssemblyInfoInputs.cache
 C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.AssemblyInfo.cs
@@ -28,3 +26,5 @@ D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibraryTestApp\obj
 D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.dll
 D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.pdb
 D:\AIE Year 2\Networking Library\Networking Library\NetworkingLibraryTestApp\obj\Debug\netcoreapp3.1\NetworkingLibraryTestApp.genruntimeconfig.cache
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryStandard.dll
+C:\Users\s200099\Documents\Networking-Library\NetworkingLibraryTestApp\bin\Debug\netcoreapp3.1\NetworkingLibraryStandard.pdb

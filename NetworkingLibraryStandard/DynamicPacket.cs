@@ -12,6 +12,18 @@ namespace NetworkingLibrary
         private List<object> dataCollection = new List<object>();
 
 
+        public DynamicPacket()
+        {
+
+        }
+
+        public DynamicPacket(params object[] data)
+        {
+            foreach (object d in data)
+                AddData(d);
+        }
+
+
         public byte[] GetRawData()
         { 
             List<byte> dataArray = new List<byte>();

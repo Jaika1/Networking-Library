@@ -2,28 +2,28 @@
   "version": 3,
   "targets": {
     ".NETCoreApp,Version=v3.1": {
-      "NetworkingLibrary/1.0.0": {
+      "NetworkingLibraryStandard/1.0.0": {
         "type": "project",
-        "framework": ".NETCoreApp,Version=v3.1",
+        "framework": ".NETStandard,Version=v2.0",
         "compile": {
-          "bin/placeholder/NetworkingLibrary.dll": {}
+          "bin/placeholder/NetworkingLibraryStandard.dll": {}
         },
         "runtime": {
-          "bin/placeholder/NetworkingLibrary.dll": {}
+          "bin/placeholder/NetworkingLibraryStandard.dll": {}
         }
       }
     }
   },
   "libraries": {
-    "NetworkingLibrary/1.0.0": {
+    "NetworkingLibraryStandard/1.0.0": {
       "type": "project",
-      "path": "../NetworkingLibrary/NetworkingLibrary.csproj",
-      "msbuildProject": "../NetworkingLibrary/NetworkingLibrary.csproj"
+      "path": "../NetworkingLibraryStandard/NetworkingLibraryStandard.csproj",
+      "msbuildProject": "../NetworkingLibraryStandard/NetworkingLibraryStandard.csproj"
     }
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v3.1": [
-      "NetworkingLibrary >= 1.0.0"
+      "NetworkingLibraryStandard >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -52,8 +52,8 @@
       "frameworks": {
         "netcoreapp3.1": {
           "projectReferences": {
-            "C:\\Users\\s200099\\Documents\\Networking-Library\\NetworkingLibrary\\NetworkingLibrary.csproj": {
-              "projectPath": "C:\\Users\\s200099\\Documents\\Networking-Library\\NetworkingLibrary\\NetworkingLibrary.csproj"
+            "C:\\Users\\s200099\\Documents\\Networking-Library\\NetworkingLibraryStandard\\NetworkingLibraryStandard.csproj": {
+              "projectPath": "C:\\Users\\s200099\\Documents\\Networking-Library\\NetworkingLibraryStandard\\NetworkingLibraryStandard.csproj"
             }
           }
         }

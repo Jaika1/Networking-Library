@@ -13,11 +13,18 @@ namespace NetworkingLibrary
     {
         private int bufferSize;
         private byte[] dataBuffer;
+        internal DateTime lastMessageReceived = DateTime.UtcNow;
+
+        public float TimeoutDelay = 20.0f;
+
+        public event Action<UdpClient> ClientDisconnected;
 
 
         public UdpClient(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret)
         {
             this.bufferSize = bufferSize;
+            netDataEvents.Add(254, MethodInfoHelper.GetMethodInfo<UdpClient>(x => x.PingEventHandler(null)));
+            netDataEvents.Add(255, MethodInfoHelper.GetMethodInfo<UdpClient>(x => x.DisconnectEventHandler(null, false)));
         }
 
         public UdpClient(Socket serverSocket, EndPoint clientEp) : base(SocketConfiguration.UdpConfiguration, 0)
@@ -51,8 +58,23 @@ namespace NetworkingLibrary
             }
 
             dataBuffer = new byte[bufferSize];
-            socket.BeginReceiveFrom(dataBuffer, 0, dataBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(DataReceivedEvent), null);
+            try
+            {
+                socket.BeginReceiveFrom(dataBuffer, 0, dataBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(DataReceivedEvent), null);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
+            }
+            _ = TimeoutLoop();
+
             return true;
+        }
+
+        public void Disconnect()
+        {
+            Send(255, new DynamicPacket(true));
+            DisconnectEventHandler(this);
         }
 
         private void DataReceivedEvent(IAsyncResult ar)
@@ -68,7 +90,14 @@ namespace NetworkingLibrary
             }
 
             dataBuffer = new byte[bufferSize];
-            socket.BeginReceiveFrom(dataBuffer, 0, dataBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(DataReceivedEvent), null);
+            try
+            {
+                socket.BeginReceiveFrom(dataBuffer, 0, dataBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(DataReceivedEvent), null);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
+            }
         }
 
         private async Task ProcessData(byte[] data)
@@ -82,16 +111,18 @@ namespace NetworkingLibrary
 
             if (netDataEvents.ContainsKey(eventId))
             {
+                lastMessageReceived = DateTime.UtcNow;
+
                 MethodInfo netEventMethod = netDataEvents[eventId];
                 ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
                 if (parameters.Length == 0)
                 {
-                    netEventMethod.Invoke(null, new object[] { this });
+                    netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, new object[] { this });
                 }
                 else if (parameters.Length == 1)
                 {
                     object o = DynamicPacket.ByteArrayToObject(usefulData);
-                    netEventMethod.Invoke(null, new object[] { this, o });
+                    netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, new object[] { this, o });
                 }
                 else
                 {
@@ -104,27 +135,10 @@ namespace NetworkingLibrary
                         objects[1 + i] = DynamicPacket.ByteArrayToObject(paramData);
                         usefulData = usefulData.Skip(2 + paramDataLength).ToArray();
                     }
-                    netEventMethod.Invoke(null, objects);
+                    netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, objects);
                 }
             }
             
-        }
-
-        internal override void SendRaw(byte packetId, byte[] rawData)
-        {
-            byte[] buffer = new byte[3 + rawData.Length];
-            buffer[0] = packetId;
-            BitConverter.GetBytes((ushort)rawData.Length).CopyTo(buffer, 1);
-            rawData.CopyTo(buffer, 3);
-
-            try 
-            {
-                socket.BeginSendTo(buffer, 0, buffer.Length, SocketFlags.None, endPoint, new AsyncCallback(SendToEvent), null);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.ToString());
-            }
         }
 
         private void SendToEvent(IAsyncResult ar)
@@ -137,6 +151,47 @@ namespace NetworkingLibrary
             {
                 Console.WriteLine(ex.ToString());
             }
+        }
+
+        private async Task TimeoutLoop()
+        {
+            while (true)
+            {
+                if ((DateTime.UtcNow - lastMessageReceived).TotalSeconds >= TimeoutDelay)
+                {
+                    Disconnect();
+                    return;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(TimeoutDelay / 4.0f));
+            }
+        }
+
+        internal override void SendRaw(byte packetId, byte[] rawData)
+        {
+            byte[] buffer = new byte[3 + rawData.Length];
+            buffer[0] = packetId;
+            BitConverter.GetBytes((ushort)rawData.Length).CopyTo(buffer, 1);
+            rawData.CopyTo(buffer, 3);
+
+            try
+            {
+                socket.BeginSendTo(buffer, 0, buffer.Length, SocketFlags.None, endPoint, new AsyncCallback(SendToEvent), null);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
+            }
+        }
+
+        protected virtual void PingEventHandler(UdpClient client) => Send(254);
+
+        protected virtual void DisconnectEventHandler(UdpClient client, bool remoteTrigger = false)
+        {
+            if (ClientDisconnected != null)
+                Array.ForEach(ClientDisconnected.GetInvocationList(), d => d.DynamicInvoke(this));
+
+            socket.Close();
         }
     }
 }
