@@ -1,3 +1,0 @@
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\x64\Debug\netcoreapp2.0\NetworkingLibrary.csprojAssemblyReference.cache
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\x64\Debug\netcoreapp2.0\NetworkingLibrary.AssemblyInfoInputs.cache
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\x64\Debug\netcoreapp2.0\NetworkingLibrary.AssemblyInfo.cs

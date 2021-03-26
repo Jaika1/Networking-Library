@@ -1,8 +1,0 @@
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\bin\x64\Debug\netcoreapp3.1\NetworkingLibrary.deps.json
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\bin\x64\Debug\netcoreapp3.1\NetworkingLibrary.dll
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\bin\x64\Debug\netcoreapp3.1\NetworkingLibrary.pdb
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\x64\Debug\netcoreapp3.1\NetworkingLibrary.csprojAssemblyReference.cache
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\x64\Debug\netcoreapp3.1\NetworkingLibrary.AssemblyInfoInputs.cache
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\x64\Debug\netcoreapp3.1\NetworkingLibrary.AssemblyInfo.cs
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\x64\Debug\netcoreapp3.1\NetworkingLibrary.dll
-C:\Users\s200099\Documents\Networking-Library\NetworkingLibrary\obj\x64\Debug\netcoreapp3.1\NetworkingLibrary.pdb
