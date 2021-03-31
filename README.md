@@ -26,7 +26,7 @@ UdpServer secretServer = new UdpServer(1234);
 UdpServer modifiedServer = new UdpServer(1234, 2048);
 ```
 
-Next, you'll need to parse through an assembly reference to this newly created instance, which will internally setup references to methods that will be called when data is received over the network. We will set up these methods later [here](#Creating-event-handlers-and adding-them-to-your-client/server), but for now while we are setting up our server and client instances, we can just get this ready and out of the way.
+Next, you'll need to parse through an assembly reference to this newly created instance, which will internally setup references to methods that will be called when data is received over the network. We will set up these methods later [here](#creating-event-handlers-and-adding-them-to-your-clientserver), but for now while we are setting up our server and client instances, we can just get this ready and out of the way.
 
 ```cs
 // First parameter is the assembly to search through for said methods
