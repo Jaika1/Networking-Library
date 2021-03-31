@@ -204,6 +204,10 @@ At this point in our application, you should be able to run it and see a message
 
 ### Creating event handlers and adding them to your client/server
 
+Before reading through this section, I'd strongly reccommend that you should already have a client *and* server ready-to-go and talking to each-other. If you haven't already done that, please look through the [client](#setting-up-the-client-class) and [server](#setting-up-the-server-class) how-to sections first. 
+
+Up until now, setup has been relatively simple! Here is where it may get ever so slightly more confusing at first for some, but all-in-all this shouldn't be too hard to implement, even if you don't fully understand why it works as of now.
+
 
 
 ## W.I.P Features
