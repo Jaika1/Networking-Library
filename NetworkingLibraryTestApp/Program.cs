@@ -62,6 +62,11 @@ class Program
         server.ClientDisconnected += Server_ClientDisconnected;
         server.StartServer(port);
 
+        UdpClient client = new UdpClient();
+        client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
+        client.ClientDisconnected += Client_ClientDisconnected;
+        client.VerifyAndListen(port);
+
         // Halt execution indefinitely so our application doesn't just immediately close.
         Thread.Sleep(-1);
     }
@@ -75,4 +80,10 @@ class Program
     {
         Console.WriteLine($"Client at {obj.IPEndPoint} disconnected from the server!");
     }
+
+    static void Client_ClientDisconnected(UdpClient obj)
+    {
+        Console.WriteLine($"Client instance has been disconnected from the server!");
+    }
+
 }

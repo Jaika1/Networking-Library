@@ -8,9 +8,9 @@ The client and server types from this library both have a fixed buffer size and 
 
 ### Setting up the server class
 
-To create a server, we will need to create an instance of `NetworkingLibrary.UdpClient`, feed it a list of event handling methods from a `System.Reflection.Assembly` instance, then start the server on the user specified end-point.
+To create a server, we will need to create an instance of `NetworkingLibrary.UdpServer`, feed it a list of event handling methods from a `System.Reflection.Assembly` instance, then start the server on the user specified end-point.
 
-Initializing an instance of `NetworkingLibrary.UdpClient` is extremely simple, as every parameter in the types constructor has a default value. You can choose to override these however you'd like to.
+Initializing an instance of `NetworkingLibrary.UdpServer` is extremely simple, as every parameter in the types constructor has a default value. You can choose to override these however you'd like to.
 
 ```cs
 // Default initialization without any changes, giving us a buffer size of 1024 bytes and making our secret 0
@@ -63,7 +63,7 @@ private static void Server_ClientDisconnected(UdpClient obj)
 }
 ```
 
-And that's all the basics to cover with server setup! There where a few instances where we dove a bit deeper into the library there, but hopefully nothing too extreme so far. To help recap all of this, here's the beginnings of a bare-minimum application using our library!
+And that's all the basics to cover with server setup! There where a few instances where we dove a bit deeper into the library there, but hopefully nothing too extreme so far. To help recap all of this, here's the beginnings of a minimalistic application using our library!
 
 ```cs
 using System;
@@ -104,9 +104,107 @@ The next section will cover setting up our client application.
 
 ### Setting up the client class
 
+Now that we have our server out of the way, we'll need to create a client to connect to it. It would be pretty lonely without one, after all! Similarly to the server, we will need to create an instance of `NetworkingLibrary.UdpClient`, feed it a list of event handling methods from a `System.Reflection.Assembly` instance, then try to verify with a server at a given remote end-point.
 
+Initializing an instance of `NetworkingLibrary.UdpClient` is virtually identical to `NetworkingLibrary.UdpServer`.
+
+```cs
+// Default initialization without any changes, giving us a buffer size of 1024 bytes and making our secret 0
+UdpClient defaultClient = new UdpClient();
+
+// Client initilization with an expanded buffer, but still the default secret of 0.
+UdpClient bufferClient = new UdpClient(bufferSize: 2048);
+
+// Client initialization with a modified secret
+UdpClient secretClient = new UdpClient(1234);
+
+// Client initialization with both a modified secret and buffer size
+UdpClient modifiedClient = new UdpClient(1234, 2048);
+```
+
+Next, just like with our server, you'll need to parse through an assembly reference to this newly created instance. This will internally setup references to methods that will be called when data is received over the network. Again, we will set up these methods later [here](#creating-event-handlers-and-adding-them-to-your-clientserver), but for now while we are setting up our server and client instances, we can just get this ready and out of the way.
+
+```cs
+// First parameter is the assembly to search through for said methods
+// Second parameter is used to determine which group of events we'll be using (More on this later, default is 0)
+client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
+```
+
+Finally, we call a single method to verify with the server. If this succeeds, we will have successfully begun talking to the server!
+
+```cs
+// When fully implemented in a real-world situation, this will be the method you'll use to connect to a remote location.
+client.VerifyAndListen(IPAddress.Parse("xxx.xxx.xxx.xxx"), 7235);
+
+// Along with that, this method here is great for testing locally, as it simply attempts to connect to the local machine using the loopback address.
+server.VerifyAndListen(7235);
+```
+
+With that all said and done, you should now have a client up and running, ready to communicate with a server! Before we conclude this section, it's absolutely worth noting that similarly like our server, there is an event you can subscribe to for when the client is disconnected. Setting this up isn't mandatory, but it's likely you'll find it extremely useful in your applications. If you'd like to implement this, I'd strongly suggest setting it up ***before*** you verify with a server. 
+
+```cs
+client.ClientDisconnected += Client_ClientDisconnected;
+
+...
+
+private static void Client_ClientDisconnected(UdpClient obj)
+{
+    // Write your code here! obj will be a reference to the client for any further reference you may need it for. 
+}
+```
+
+To once again recap all of what we just went through for those following along, let's now update our minimalistic application so it can talk to itself using the loopback address.
+
+```cs
+using System;
+using System.Reflection;
+using System.Threading;
+using NetworkingLibrary;
+
+class Program
+{
+    static void Main()
+    {
+        // Just a random port I've decided on, you can use whatever you want.
+        int port = 7235;
+
+        UdpServer server = new UdpServer();
+        server.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
+        server.ClientConnected += Server_ClientConnected;
+        server.ClientDisconnected += Server_ClientDisconnected;
+        server.StartServer(port);
+        
+        UdpClient client = new UdpClient();
+        client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
+        client.ClientDisconnected += Client_ClientDisconnected;
+        client.VerifyAndListen(port);
+
+        // Halt execution indefinitely so our application doesn't just immediately close.
+        Thread.Sleep(-1); 
+    }
+
+    static void Server_ClientConnected(UdpClient obj)
+    {
+        Console.WriteLine($"Client at {obj.IPEndPoint} connected to the server!");
+    }
+
+    static void Server_ClientDisconnected(UdpClient obj)
+    {
+        Console.WriteLine($"Client at {obj.IPEndPoint} disconnected from the server!");
+    }
+
+    static void Client_ClientDisconnected(UdpClient obj)
+    {
+        Console.WriteLine($"Client instance has been disconnected from the server!");
+    }
+}
+```
+
+At this point in our application, you should be able to run it and see a message appear in the console informing us that a client has connected to our server! While this is very exciting at first, that excitment will quickly fade as after that, nothing will ever happen. Even if you tried to send data down the line from either server to client or client to server, you'd ultimately still never see anything happening what-so-ever. This is because we need to create methods in our application that deals with sent data so our client and server know how to deal with each specific request, which is exactly what will be covered in the next section. After that, you should be all set to begin effectively using the library!
 
 ### Creating event handlers and adding them to your client/server
+
+
 
 ## W.I.P Features
 - Document ***everything*** with XML and create library documentation via the use of doxygen

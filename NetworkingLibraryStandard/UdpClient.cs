@@ -27,7 +27,7 @@ namespace NetworkingLibrary
             netDataEvents.Add(255, MethodInfoHelper.GetMethodInfo<UdpClient>(x => x.DisconnectEventHandler(null, false)));
         }
 
-        public UdpClient(Socket serverSocket, EndPoint clientEp) : base(SocketConfiguration.UdpConfiguration, 0)
+        internal UdpClient(Socket serverSocket, EndPoint clientEp) : base(SocketConfiguration.UdpConfiguration, 0)
         {
             socket = serverSocket;
             endPoint = clientEp;
