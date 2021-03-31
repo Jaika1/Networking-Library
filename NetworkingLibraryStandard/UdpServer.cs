@@ -29,10 +29,11 @@ namespace NetworkingLibrary
             netDataEvents.Add(255, MethodInfoHelper.GetMethodInfo<UdpServer>(x => x.DisconnectEventHandler(null, false)));
         }
 
+        public void StartServer(int bindPort) => StartServer(IPAddress.Any, bindPort);
 
-        public void StartServer(int port)
+        public void StartServer(IPAddress bindIp, int bindPort)
         {
-            endPoint = new IPEndPoint(IPAddress.Any, port);
+            endPoint = new IPEndPoint(bindIp, bindPort);
             socket.Bind(endPoint);
             dataBuffer = new byte[bufferSize];
             try

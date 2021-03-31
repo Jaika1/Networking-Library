@@ -33,10 +33,11 @@ namespace NetworkingLibrary
             endPoint = clientEp;
         }
 
-        
-        public bool VerifyAndListen(IPEndPoint serverEndPoint)
+        public bool VerifyAndListen(int port) => VerifyAndListen(IPAddress.Loopback, port);
+
+        public bool VerifyAndListen(IPAddress remoteIp, int port)
         {
-            endPoint = serverEndPoint;
+            endPoint = new IPEndPoint(remoteIp, port); ;
             byte[] verification = BitConverter.GetBytes(Secret);
             socket.SendTo(verification, 0, verification.Length, SocketFlags.None, endPoint);
 
