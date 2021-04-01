@@ -27,13 +27,13 @@ namespace NetworkingLibrary.Helpers.Conversion
         }
 
 
-        public bool HasConverterOfType(Type type) => knownConverters.Any(c => c.T.Equals(type));
+        public bool HasConverterOfType(Type type) => knownConverters.Any(c => c.T == type);
 
-        public bool HasConverterOfType<T>() => knownConverters.Any(c => c.T.Equals(typeof(T)));
+        public bool HasConverterOfType<T>() => knownConverters.Any(c => c.T == typeof(T));
 
         public void AddConverter(IByteConverterModule converter)
         {
-            if (knownConverters.Any(c => c.T.Equals(converter.T)))
+            if (knownConverters.Any(c => c.T == converter.T))
             {
                 throw new Exception($"A converter for type {converter.T.FullName} has already been added!");
             }
@@ -60,10 +60,10 @@ namespace NetworkingLibrary.Helpers.Conversion
 
         public (object Instance, int BytesParsed) ObjectFromBytes(Type instanceType, byte[] data, int length = -1)
         {
-            if (!knownConverters.Any(c => c.T.Equals(instanceType)))
+            if (!knownConverters.Any(c => c.T == instanceType))
                 throw new Exception($"No conversion method exists for type of {instanceType.FullName}!");
 
-            return knownConverters.First(c => c.T.Equals(instanceType)).ObjectFromBytes(data, length);
+            return knownConverters.First(c => c.T == instanceType).ObjectFromBytes(data, length);
         }
     }
 }

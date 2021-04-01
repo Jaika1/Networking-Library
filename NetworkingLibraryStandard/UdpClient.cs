@@ -38,7 +38,7 @@ namespace NetworkingLibrary
 
         public bool VerifyAndListen(IPAddress remoteIp, int port)
         {
-            endPoint = new IPEndPoint(remoteIp, port); ;
+            endPoint = new IPEndPoint(remoteIp, port);
             byte[] verification = BitConverter.GetBytes(Secret);
             socket.SendTo(verification, 0, verification.Length, SocketFlags.None, endPoint);
 
@@ -104,12 +104,53 @@ namespace NetworkingLibrary
 
         private async Task ProcessData(byte[] data)
         {
-            if (data.Length < 3) return;
+            #region old method
+            //if (data.Length < 3) return;
+
+            //byte eventId = data[0];
+            //ushort dataLength = BitConverter.ToUInt16(data, 1); // Used here for error checking.
+            //byte[] usefulData = data.Skip(3).ToArray();
+            //if (usefulData.Length != dataLength) return;
+
+            //if (netDataEvents.ContainsKey(eventId))
+            //{
+            //    lastMessageReceived = DateTime.UtcNow;
+
+            //    MethodInfo netEventMethod = netDataEvents[eventId];
+            //    ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
+            //    if (parameters.Length == 0)
+            //    {
+            //        netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, new object[] { this });
+            //    }
+            //    else if (parameters.Length == 1)
+            //    {
+            //        object o = DynamicPacket.ByteArrayToObject(usefulData);
+            //        netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, new object[] { this, o });
+            //    }
+            //    else
+            //    {
+            //        object[] objects = new object[1 + parameters.Length];
+            //        objects[0] = this;
+            //        for (int i = 0; i < parameters.Length; ++i)
+            //        {
+            //            ushort paramDataLength = BitConverter.ToUInt16(usefulData, 0);
+            //            byte[] paramData = usefulData.Skip(2).Take(paramDataLength).ToArray();
+            //            objects[1 + i] = DynamicPacket.ByteArrayToObject(paramData);
+            //            usefulData = usefulData.Skip(2 + paramDataLength).ToArray();
+            //        }
+            //        netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, objects);
+            //    }
+            //}
+            #endregion
+
+            if (data.Length < 3)
+                return;
 
             byte eventId = data[0];
-            ushort dataLength = BitConverter.ToUInt16(data, 1); // Used here for error checking.
-            byte[] usefulData = data.Skip(3).ToArray();
-            if (usefulData.Length != dataLength) return;
+            ushort dataLength = BitConverter.ToUInt16(data, 1);
+            byte[] netData = data.Skip(3).ToArray();
+            if (dataLength != netData.Length)
+                return;
 
             if (netDataEvents.ContainsKey(eventId))
             {
@@ -117,30 +158,15 @@ namespace NetworkingLibrary
 
                 MethodInfo netEventMethod = netDataEvents[eventId];
                 ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
-                if (parameters.Length == 0)
-                {
-                    netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, new object[] { this });
-                }
-                else if (parameters.Length == 1)
-                {
-                    object o = DynamicPacket.ByteArrayToObject(usefulData);
-                    netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, new object[] { this, o });
-                }
-                else
-                {
-                    object[] objects = new object[1 + parameters.Length];
-                    objects[0] = this;
-                    for (int i = 0; i < parameters.Length; ++i)
-                    {
-                        ushort paramDataLength = BitConverter.ToUInt16(usefulData, 0);
-                        byte[] paramData = usefulData.Skip(2).Take(paramDataLength).ToArray();
-                        objects[1 + i] = DynamicPacket.ByteArrayToObject(paramData);
-                        usefulData = usefulData.Skip(2 + paramDataLength).ToArray();
-                    }
-                    netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, objects);
-                }
+                Type[] parameterTypes = (from p in parameters
+                                         select p.ParameterType).ToArray();
+
+                object[] instances = DynamicPacket.GetInstancesFromData(netData, converterInstance, parameterTypes);
+                object[] instancesWithNetBase = new object[1 + instances.Length];
+                instancesWithNetBase[0] = this;
+                instances.CopyTo(instancesWithNetBase, 1);
+                netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, instancesWithNetBase);
             }
-            
         }
 
         private void SendToEvent(IAsyncResult ar)

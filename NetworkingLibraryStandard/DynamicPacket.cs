@@ -94,10 +94,28 @@ namespace NetworkingLibrary
 
         internal static object[] GetInstancesFromData(byte[] data, ByteConverter converter, params Type[] types)
         {
-            if (types.Any(x => !converter.HasConverterOfType(x.GetType())))
+            if (types.Any(x => !converter.HasConverterOfType(x)))
                 throw new Exception("The given converter couldn't parse one of the provided types!");
 
+            if (types.Count() == 0)
+                return new object[0];
 
+            if (types.Count() == 1)
+                return new[] { converter.ObjectFromBytes(types[0], data).Instance };
+
+            // types.Count() > 1
+
+            object[] objects = new object[types.Count()];
+            byte[] dataClone = data.Clone() as byte[];
+
+            for(int i = 0; i < objects.Length; ++i)
+            {
+                (object Instance, int BytesParsed) t = converter.ObjectFromBytes(types[i], dataClone, 2);
+                objects[i] = t.Instance;
+                dataClone = dataClone.Skip(t.BytesParsed).ToArray();
+            }
+
+            return objects;
         }
     }
 }

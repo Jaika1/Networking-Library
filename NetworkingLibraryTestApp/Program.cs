@@ -1,33 +1,11 @@
 ﻿using System;
+using System.Net;
 using System.Reflection;
 using System.Threading;
 using NetworkingLibrary;
 
 class Program
 {
-    static void Main()
-    {
-        // Just a random port I've decided on, you can use whatever you want.
-        int port = 7235;
-
-        UdpServer server = new UdpServer();
-        server.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
-        server.ClientConnected += Server_ClientConnected;
-        server.ClientDisconnected += Server_ClientDisconnected;
-        server.StartServer(port);
-
-        UdpClient client = new UdpClient();
-        client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1); // Take note that we've updated the group ID here to 1!
-        client.ClientDisconnected += Client_ClientDisconnected;
-        client.VerifyAndListen(port);
-
-        // Send a "dummy" message to all connected clients
-        server.Send(0);
-
-        // Halt execution indefinitely so our application doesn't just immediately close.
-        Thread.Sleep(-1);
-    }
-
     //static void Main()
     //{
     //    ByteConverter converter = new ByteConverter();
@@ -40,8 +18,39 @@ class Program
     //    Console.WriteLine($"{b1,-24}|{b2, 24}");
     //}
 
-    // Event responding methods from before
+    static void Main()
+    {
+        int port = 7235;
 
+        UdpServer server = new UdpServer();
+        server.TimeoutDelay = 10000.0f;
+        server.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
+        server.ClientConnected += Server_ClientConnected;
+        server.ClientDisconnected += Server_ClientDisconnected;
+        server.StartServer(port);
+
+        UdpClient client = new UdpClient();
+        client.TimeoutDelay = 10000.0f;
+        client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1); 
+        client.ClientDisconnected += Client_ClientDisconnected;
+        client.VerifyAndListen(port);
+
+        // Dataless
+        server.Send(0);
+        Thread.Sleep(20);
+
+        // Boolean
+        server.Send(1, true);
+        Thread.Sleep(20);
+
+        // Multiple types
+        server.Send(2, "Hello World!", 37);
+        Thread.Sleep(20);
+
+        Thread.Sleep(-1);
+    }
+
+    // Event responding methods
     static void Server_ClientConnected(UdpClient obj)
     {
         Console.WriteLine($"Client at {obj.IPEndPoint} connected to the server!");
@@ -55,19 +64,5 @@ class Program
     static void Client_ClientDisconnected(UdpClient obj)
     {
         Console.WriteLine($"Client instance has been disconnected from the server!");
-    }
-
-    // Net events for our server and client
-    [NetDataEvent(0, 0)]
-    static void PrintPong(UdpClient client)
-    {
-        Console.WriteLine("Pong!");
-    }
-
-    [NetDataEvent(0, 1)]
-    static void PrintPingAndRespond(UdpClient client)
-    {
-        Console.WriteLine("Ping!");
-        client.Send(0);
     }
 }
