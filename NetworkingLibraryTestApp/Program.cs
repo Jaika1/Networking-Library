@@ -33,11 +33,11 @@ class Program
     {
         ByteConverter converter = new ByteConverter();
 
-        char b1 = '\x56';
+        string b1 = "yippe yippe";
 
-        byte[] d = converter.ConvertToBytes(b1);
+        byte[] d = converter.ConvertToBytes(b1, false);
 
-        char b2 = (char)converter.ObjectFromBytes(b1.GetType(), d);
+        string b2 = (string)converter.ObjectFromBytes(b1.GetType(), d);
         Console.WriteLine($"{b1,-24}|{b2, 24}");
     }
 

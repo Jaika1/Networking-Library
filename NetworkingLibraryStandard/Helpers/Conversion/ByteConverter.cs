@@ -22,7 +22,7 @@ namespace NetworkingLibrary.Helpers.Conversion
                                      select t).ToArray();
 
                 foreach (Type c in converters)
-                    knownConverters.Add((IByteConverterModule)Activator.CreateInstance(c));
+                    AddConverter((IByteConverterModule)Activator.CreateInstance(c));
             }
         }
 
@@ -38,6 +38,7 @@ namespace NetworkingLibrary.Helpers.Conversion
                 throw new Exception($"A converter for type {converter.T.FullName} has already been added!");
             }
 
+            converter.ParentModule = this;
             knownConverters.Add(converter);
         }
 
@@ -50,6 +51,8 @@ namespace NetworkingLibrary.Helpers.Conversion
 
             return knownConverters.First(c => c.T.Equals(instanceType)).ConvertToBytes(instance, includeLength);
         }
+
+        public T ObjectFromBytes<T>(byte[] data, int length = -1) => (T)ObjectFromBytes(typeof(T), data, length);
 
         public object ObjectFromBytes(Type instanceType, byte[] data, int length = -1)
         {

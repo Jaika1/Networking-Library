@@ -4,6 +4,8 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
 {
     public class ULongConverterModule : IByteConverterModule
     {
+        public ByteConverter ParentModule { get; set; } = null;
+
         public Type T { get; } = typeof(ulong);
 
 

@@ -4,6 +4,8 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
 {
     public class BooleanConverterModule : IByteConverterModule
     {
+        public ByteConverter ParentModule { get; set; } = null;
+
         public Type T { get; } = typeof(bool);
 
 
