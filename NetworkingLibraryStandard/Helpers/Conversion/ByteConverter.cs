@@ -52,9 +52,13 @@ namespace NetworkingLibrary.Helpers.Conversion
             return knownConverters.First(c => c.T.Equals(instanceType)).ConvertToBytes(instance, includeLength);
         }
 
-        public T ObjectFromBytes<T>(byte[] data, int length = -1) => (T)ObjectFromBytes(typeof(T), data, length);
+        public (T Instance, int BytesParsed) ObjectFromBytes<T>(byte[] data, int length = -1)
+        {
+            (object, int) t = ObjectFromBytes(typeof(T), data, length);
+            return ((T)t.Item1, t.Item2);
+        }
 
-        public object ObjectFromBytes(Type instanceType, byte[] data, int length = -1)
+        public (object Instance, int BytesParsed) ObjectFromBytes(Type instanceType, byte[] data, int length = -1)
         {
             if (!knownConverters.Any(c => c.T.Equals(instanceType)))
                 throw new Exception($"No conversion method exists for type of {instanceType.FullName}!");

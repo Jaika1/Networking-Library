@@ -1,4 +1,5 @@
 ﻿using NetworkingLibrary.Extensions;
+using NetworkingLibrary.Helpers.Conversion;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,11 +17,12 @@ namespace NetworkingLibrary
         protected Socket socket;
         protected Dictionary<byte, MethodInfo> netDataEvents = new Dictionary<byte, MethodInfo>();
         protected EndPoint endPoint;
-
+        protected ByteConverter converterInstance = new ByteConverter();
 
         public uint Secret => secret;
         public EndPoint EndPoint => endPoint;
         public IPEndPoint IPEndPoint => (IPEndPoint)endPoint;
+        public ByteConverter Converter => converterInstance;
 
 
         public NetBase(SocketConfiguration socketConfig, uint secret = 0)
@@ -77,9 +79,9 @@ namespace NetworkingLibrary
 
         public void Send(byte packetId) => SendRaw(packetId, new byte[0]);
 
-        public void Send(byte packetId, byte[] data) => SendRaw(packetId, DynamicPacket.ObjectToByteArray(data));
+        public void Send(byte packetId, params object[] data) => SendRaw(packetId, new DynamicPacket(data).GetRawData(converterInstance));
 
-        public void Send(byte packetId, DynamicPacket packet) => SendRaw(packetId, packet.GetRawData());
+        public void Send(byte packetId, DynamicPacket packet) => SendRaw(packetId, packet.GetRawData(converterInstance));
 
         internal virtual void SendRaw(byte packetId, byte[] rawData)
             => throw new NotImplementedException("The inheriting class did not override this method! This is most certainly an oversight by the developer who created the inheriting class.");

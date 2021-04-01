@@ -26,7 +26,7 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
             return data;
         } 
 
-        public object ObjectFromBytes(byte[] data, int length)
+        public (object Instance, int BytesParsed) ObjectFromBytes(byte[] data, int length)
         {
             int[] bits = new int[4];
 
@@ -35,7 +35,7 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
                 bits[i] = (data[(i * 4) + 0] << 24) | (data[(i * 4) + 1] << 16) | (data[(i * 4) + 2] << 8) | (data[(i * 4) + 3] << 0);
             }
 
-            return new decimal(bits);
+            return (new decimal(bits), 16);
         }
     }
 }
