@@ -10,6 +10,6 @@ namespace NetworkingLibrary.Helpers.Conversion
 
         byte[] ConvertToBytes(object instance, bool includeLength);
 
-        (object Instance, int BytesParsed) ObjectFromBytes(byte[] data, int length);
+        (object Instance, int BytesParsed) ObjectFromBytes(byte[] data, int length, Type instanceType);
     }
 }

@@ -27,13 +27,13 @@ namespace NetworkingLibrary.Helpers.Conversion
         }
 
 
-        public bool HasConverterOfType(Type type) => knownConverters.Any(c => c.T == type);
+        public bool HasConverterOfType(Type type) => knownConverters.Any(c => c.T == type || c.T == type.BaseType);
 
-        public bool HasConverterOfType<T>() => knownConverters.Any(c => c.T == typeof(T));
+        public bool HasConverterOfType<T>() => knownConverters.Any(c => c.T == typeof(T) || c.T == typeof(T).BaseType);
 
         public void AddConverter(IByteConverterModule converter)
         {
-            if (knownConverters.Any(c => c.T == converter.T))
+            if (HasConverterOfType(converter.T))
             {
                 throw new Exception($"A converter for type {converter.T.FullName} has already been added!");
             }
@@ -46,10 +46,10 @@ namespace NetworkingLibrary.Helpers.Conversion
         {
             Type instanceType = instance.GetType();
 
-            if (!knownConverters.Any(c => c.T.Equals(instanceType)))
+            if (!HasConverterOfType(instanceType))
                 throw new Exception($"No conversion method exists for type of {instanceType.FullName}!");
 
-            return knownConverters.First(c => c.T.Equals(instanceType)).ConvertToBytes(instance, includeLength);
+            return knownConverters.First(c => c.T == instanceType || c.T == instanceType.BaseType).ConvertToBytes(instance, includeLength);
         }
 
         public (T Instance, int BytesParsed) ObjectFromBytes<T>(byte[] data, int length = -1)
@@ -60,10 +60,10 @@ namespace NetworkingLibrary.Helpers.Conversion
 
         public (object Instance, int BytesParsed) ObjectFromBytes(Type instanceType, byte[] data, int length = -1)
         {
-            if (!knownConverters.Any(c => c.T == instanceType))
+            if (!HasConverterOfType(instanceType))
                 throw new Exception($"No conversion method exists for type of {instanceType.FullName}!");
 
-            return knownConverters.First(c => c.T == instanceType).ObjectFromBytes(data, length);
+            return knownConverters.First(c => c.T == instanceType || c.T == instanceType.BaseType).ObjectFromBytes(data, length, instanceType);
         }
     }
 }

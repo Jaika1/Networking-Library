@@ -1,5 +1,4 @@
-﻿using NetworkingLibrary.Extensions;
-using NetworkingLibrary.Helpers.Conversion;
+﻿using NetworkingLibrary.Helpers.Conversion;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -54,7 +53,6 @@ namespace NetworkingLibrary
         {
             List<MethodInfo> netEventGroupMethods = (from t in asm.GetTypes()
                                                      from m in t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
-                                                     where m.IsStatic
                                                      where m.GetCustomAttribute<NetDataEventAttribute>() != null
                                                      where m.GetCustomAttribute<NetDataEventAttribute>().EventGroupIdentifier == eventGroupIdentifier
                                                      where m.GetParameters().Length > 0
@@ -79,7 +77,7 @@ namespace NetworkingLibrary
 
         public void Send(byte packetId) => SendRaw(packetId, new byte[0]);
 
-        public void Send(byte packetId, params object[] data) => SendRaw(packetId, new DynamicPacket(data).GetRawData(converterInstance));
+        public void Send(byte packetId, params object[] data) => Send(packetId, new DynamicPacket(data));
 
         public void Send(byte packetId, DynamicPacket packet) => SendRaw(packetId, packet.GetRawData(converterInstance));
 

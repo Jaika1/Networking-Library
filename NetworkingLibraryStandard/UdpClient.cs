@@ -1,5 +1,4 @@
-﻿using NetworkingLibrary.Extensions;
-using NetworkingLibrary.Helpers;
+﻿using NetworkingLibrary.Helpers;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -162,6 +161,7 @@ namespace NetworkingLibrary
                                          select p.ParameterType).ToArray();
 
                 object[] instances = DynamicPacket.GetInstancesFromData(netData, converterInstance, parameterTypes);
+
                 object[] instancesWithNetBase = new object[1 + instances.Length];
                 instancesWithNetBase[0] = this;
                 instances.CopyTo(instancesWithNetBase, 1);

@@ -22,5 +22,12 @@ namespace NetworkingLibraryTestApp
         {
             Console.WriteLine($"{sender.IPEndPoint,20}] String with value \"{s}\" and int with value \"{i}\" received from the client!");
         }
+
+        [NetDataEvent(3)]
+        static void ServerArrayResponse(UdpClient sender, string[] a)
+        {
+            Console.WriteLine("Data received from client:");
+            Array.ForEach(a, i => Console.WriteLine(i));
+        }
     }
 }

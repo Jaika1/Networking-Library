@@ -26,7 +26,7 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
             return data;
         }
 
-        public (object Instance, int BytesParsed) ObjectFromBytes(byte[] data, int length)
+        public (object Instance, int BytesParsed) ObjectFromBytes(byte[] data, int length, Type type)
         {
             if (length == -1)
                 return (Encoding.UTF8.GetString(data), data.Length);

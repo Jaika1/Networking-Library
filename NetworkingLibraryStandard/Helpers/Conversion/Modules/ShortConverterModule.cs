@@ -11,6 +11,6 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
 
         public byte[] ConvertToBytes(object instance, bool includeLength) => BitConverter.GetBytes((short)instance);
 
-        public (object Instance, int BytesParsed) ObjectFromBytes(byte[] data, int length) => (BitConverter.ToInt16(data, 0), 2);
+        public (object Instance, int BytesParsed) ObjectFromBytes(byte[] data, int length, Type type) => (BitConverter.ToInt16(data, 0), 2);
     }
 }

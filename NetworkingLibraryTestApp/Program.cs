@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Reflection;
 using System.Threading;
 using NetworkingLibrary;
@@ -10,12 +9,12 @@ class Program
     //{
     //    ByteConverter converter = new ByteConverter();
 
-    //    string b1 = "yippe yippe";
+    //    int[] b1 = new[] { 12, -4321, 123456 };
 
     //    byte[] d = converter.ConvertToBytes(b1, false);
 
-    //    string b2 = (string)converter.ObjectFromBytes(b1.GetType(), d);
-    //    Console.WriteLine($"{b1,-24}|{b2, 24}");
+    //    int[] b2 = ((object[])converter.ObjectFromBytes(b1.GetType(), d).Instance).Cast<int>().ToArray();
+    //    Console.WriteLine($"{b1,-24}|{b2,24}");
     //}
 
     static void Main()
@@ -31,21 +30,27 @@ class Program
 
         UdpClient client = new UdpClient();
         client.TimeoutDelay = 10000.0f;
-        client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1); 
+        client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1);
         client.ClientDisconnected += Client_ClientDisconnected;
         client.VerifyAndListen(port);
 
-        // Dataless
-        server.Send(0);
-        Thread.Sleep(20);
+        //// Dataless
+        //server.Send(0);
+        //Thread.Sleep(20);
 
-        // Boolean
-        server.Send(1, true);
-        Thread.Sleep(20);
+        //// Boolean
+        //server.Send(1, true);
+        //Thread.Sleep(20);
 
-        // Multiple types
-        server.Send(2, "Hello World!", 37);
-        Thread.Sleep(20);
+        //// Multiple types
+        //server.Send(2, "Hello World!", 37);
+        //Thread.Sleep(20);
+
+        server.Send(3, (object)new string[]
+        {
+            "This is the first string!",
+            "This is the second string!"
+        });
 
         Thread.Sleep(-1);
     }
@@ -64,5 +69,11 @@ class Program
     static void Client_ClientDisconnected(UdpClient obj)
     {
         Console.WriteLine($"Client instance has been disconnected from the server!");
+    }
+
+    enum IntEnum : ulong
+    {
+        Piss,
+        Ass
     }
 }

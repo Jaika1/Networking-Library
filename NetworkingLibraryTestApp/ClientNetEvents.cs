@@ -20,10 +20,18 @@ namespace NetworkingLibraryTestApp
         }
 
         [NetDataEvent(2, 1)]
-        static void ServerMultiTypeResponse(UdpClient client, string s, int i)
+        static void ClientMultiTypeResponse(UdpClient client, string s, int i)
         {
             Console.WriteLine($"{client.IPEndPoint,20}] String with value \"{s}\" and int with value \"{i}\" received from the server! Will respond with the same data!");
             client.Send(2, s, i);
+        }
+
+        [NetDataEvent(3, 1)]
+        static void ClientArrayResponse(UdpClient client, string[] a)
+        {
+            Console.WriteLine("Data received from server:");
+            Array.ForEach(a, i => Console.WriteLine(i));
+            client.Send(3, (object)a);
         }
     }
 }
