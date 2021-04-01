@@ -303,15 +303,15 @@ Take note down the bottom how we've created 2 events, one for our server and the
 As an additional note, you can add parameters to your functions and `Send` calls to parse extra information through down the network! This should be valid for any simple value type, such as numbers, strings and structs. Most reference types such as classes, however, cannot be sent in whole, so you'll need to split up the nessecary data yourself. Reference types that are supported by default are `System.String`, `System.Enum`, and `System.Array` in cases where the array is one-dimensional.
 
 ```cs
-[NetDataEvent(0, 1)]
+[NetDataEvent(0, 0)]
 static void ExampleMethod1(UdpClient client, int i)
 {
     Console.WriteLine($"Received the number {i} from the server!");
-    client.Send(0, new DynamicPacket(i, i + 1));
+    client.Send(0, i, i + 1);
 }
 
-[NetDataEvent(0, 0)]
-static void ExampleMethod2(UdpClient client, int i1, int i2)
+[NetDataEvent(0, 1)]
+static void ExampleMethod2(UdpClient sender, int i1, int i2)
 {
     Console.WriteLine($"Received the numbers {i1} and {i2} from the client!");
 }
@@ -320,4 +320,4 @@ static void ExampleMethod2(UdpClient client, int i1, int i2)
 ## W.I.P Features
 - Document ***everything*** with XML and create library documentation via the use of doxygen
 - Find a way to forcibly stop all asynchronous tasks when the client and server are closed for cleaner shutdown.
-- Rework automatic type conversions and try to minimize the need to use the DynamicPacket class as much as possible to keep things simple.
+- Add Enums, Structs and 1D Arrays of supported types to the supported auto-conversion list
