@@ -1,4 +1,5 @@
 ﻿using NetworkingLibrary.Extensions;
+using NetworkingLibrary.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,12 +23,17 @@ namespace NetworkingLibrary
         public event Action<UdpClient> ClientConnected;
         public event Action<UdpClient> ClientDisconnected;
 
+
+        public IReadOnlyList<UdpClient> Clients => clientList;
+
+
         public UdpServer(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret)
         {
             this.bufferSize = bufferSize;
             netDataEvents.Add(254, MethodInfoHelper.GetMethodInfo<UdpServer>(x => x.PingEventHandler(null)));
             netDataEvents.Add(255, MethodInfoHelper.GetMethodInfo<UdpServer>(x => x.DisconnectEventHandler(null, false)));
         }
+
 
         public void StartServer(int bindPort) => StartServer(IPAddress.Any, bindPort);
 
@@ -56,6 +62,7 @@ namespace NetworkingLibrary
 
             socket.Close();
         }
+
 
         private void DataReceivedEvent(IAsyncResult ar)
         {

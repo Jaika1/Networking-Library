@@ -1,77 +1,44 @@
-﻿//using NetworkingLibrary;
-//using System;
-//using System.Reflection;
-//using System.Threading;
-
-//namespace NetworkingLibraryTestApp
-//{
-//    class Program
-//    {
-//        static void Main(string[] args)
-//        {
-//            UdpServer udpSv = new UdpServer();
-//            udpSv.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1);
-//            udpSv.ClientConnected += UdpSv_ClientConnected;
-//            udpSv.ClientDisconnected += UdpSv_ClientDisconnected;
-//            udpSv.StartServer(7235);
-
-//            UdpClient udpCl = new UdpClient();
-//            udpCl.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1);
-//            udpCl.ClientDisconnected += UdpCl_ClientDisconnected;
-//            udpCl.VerifyAndListen(7235);
-
-//            Thread.Sleep(4000);
-
-//            udpSv.CloseServer();
-
-//            Thread.Sleep(-1);
-//        }
-//        private static void UdpSv_ClientConnected(UdpClient obj)
-//        {
-//            Console.WriteLine($"Client at {obj.IPEndPoint} connected to the server!");
-//        }
-
-//        private static void UdpSv_ClientDisconnected(UdpClient obj)
-//        {
-//            Console.WriteLine($"Client at {obj.IPEndPoint} disconnected from the server!");
-//        }
-
-//        private static void UdpCl_ClientDisconnected(UdpClient obj)
-//        {
-//            Console.WriteLine($"Client disconnected from the server!");
-//        }
-
-//    }
-//}
-
-using System;
+﻿using System;
 using System.Reflection;
 using System.Threading;
 using NetworkingLibrary;
+using NetworkingLibrary.Helpers.Conversion;
 
 class Program
 {
+    //static void Main()
+    //{
+    //    // Just a random port I've decided on, you can use whatever you want.
+    //    int port = 7235;
+
+    //    UdpServer server = new UdpServer();
+    //    server.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
+    //    server.ClientConnected += Server_ClientConnected;
+    //    server.ClientDisconnected += Server_ClientDisconnected;
+    //    server.StartServer(port);
+
+    //    UdpClient client = new UdpClient();
+    //    client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1); // Take note that we've updated the group ID here to 1!
+    //    client.ClientDisconnected += Client_ClientDisconnected;
+    //    client.VerifyAndListen(port);
+
+    //    // Send a "dummy" message to all connected clients
+    //    server.Send(0);
+
+    //    // Halt execution indefinitely so our application doesn't just immediately close.
+    //    Thread.Sleep(-1);
+    //}
+
     static void Main()
     {
-        // Just a random port I've decided on, you can use whatever you want.
-        int port = 7235;
+        ByteConverter converter = new ByteConverter();
 
-        UdpServer server = new UdpServer();
-        server.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
-        server.ClientConnected += Server_ClientConnected;
-        server.ClientDisconnected += Server_ClientDisconnected;
-        server.StartServer(port);
+        char b1 = '\x56';
 
-        UdpClient client = new UdpClient();
-        client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1); // Take note that we've updated the group ID here to 1!
-        client.ClientDisconnected += Client_ClientDisconnected;
-        client.VerifyAndListen(port);
+        byte[] d = converter.ConvertToBytes(b1);
 
-        // Send a "dummy" message to all connected clients
-        server.Send(0);
-
-        // Halt execution indefinitely so our application doesn't just immediately close.
-        Thread.Sleep(-1);
+        char b2 = (char)converter.ObjectFromBytes(b1.GetType(), d);
+        Console.WriteLine($"{b1,-24}|{b2, 24}");
     }
 
     // Event responding methods from before

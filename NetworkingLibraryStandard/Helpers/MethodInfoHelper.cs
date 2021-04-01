@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace NetworkingLibrary
+namespace NetworkingLibrary.Helpers
 {
     public static class MethodInfoHelper
     {
