@@ -51,7 +51,7 @@ namespace NetworkingLibrary
         public void AddNetEventsFromAssembly(Assembly asm, int eventGroupIdentifier = 0)
         {
             List<MethodInfo> netEventGroupMethods = (from t in asm.GetTypes()
-                                                     from m in t.GetMethods()
+                                                     from m in t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
                                                      where m.IsStatic
                                                      where m.GetCustomAttribute<NetDataEventAttribute>() != null
                                                      where m.GetCustomAttribute<NetDataEventAttribute>().EventGroupIdentifier == eventGroupIdentifier

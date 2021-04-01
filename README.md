@@ -206,11 +206,118 @@ At this point in our application, you should be able to run it and see a message
 
 Before reading through this section, I'd strongly reccommend that you should already have a client *and* server ready-to-go and talking to each-other. If you haven't already done that, please look through the [client](#setting-up-the-client-class) and [server](#setting-up-the-server-class) how-to sections first. 
 
-Up until now, setup has been relatively simple! Here is where it may get ever so slightly more confusing at first for some, but all-in-all this shouldn't be too hard to implement, even if you don't fully understand why it works as of now.
+Up to now, setup has been relatively simple! Here is where it may get ever so slightly more confusing at first for some, but all-in-all this shouldn't be too hard to implement, even if you don't fully understand why it works as of now. 
 
+To mark methods as network events to be held by the client or server, we will be using the `NetworkingLibrary.NetDataEventAttribute` attribute. If you've never used attributes before, that's OK! This example should give you enough information to use them for this library.
 
+First, we need to create a ***static*** method, where the ***first parameter*** is an inheritor of `NetworkingLibrary.NetBase`. At the moment, the value parsed into here will only be of type `NetworkingLibrary.UdpClient`, so we shall specify that instead (NetBase is used internally for potential future expansion). The methods return type should be void, although you can make it whatever you want without issue, since the library will never touch the result.
+
+```cs
+static void PrintPong(UdpClient client)
+{
+    Console.WriteLine("Pong!");
+}
+```
+
+Next, we will need to give this method our attribute. Due to how C# works, you should be able to exclude `Attribute` from the type name when implementing it, just to help clarify the code below.
+
+```cs
+[NetDataEvent(0, 0)]
+static void PrintPong(UdpClient client)
+{
+    Console.WriteLine("Pong!");
+}
+```
+
+The first number we place within this attribute is the *event id*. When we send messages to our client or server, we have to specify a number first, which identifies our packet and lets us know what we want to do with it down the other end. Our attribute here is what determines the method to fire on said recieving end when this data arrives. The second number determines the group of events this method shall belong to. To help explain, lets take a look back at the `AddNetEventsFromAssembly` functions we called for our client and server instances. If you recall, we had the option of parsing a number into this method at the end, with the default being zero. That number is what determines which events will be added to that instance and which ones will be ignored based on what group id we give to our attributes. Just like the method that interacts with them, this attribute will also default the group id to 0 if it isn't specified.
+
+To make more sense out of this, lets finally complete our minimalistic application below, then explain what's been added in more detail.
+
+```cs
+using System;
+using System.Reflection;
+using System.Threading;
+using NetworkingLibrary;
+
+class Program
+{
+    static void Main()
+    {
+        // Just a random port I've decided on, you can use whatever you want.
+        int port = 7235;
+
+        UdpServer server = new UdpServer();
+        server.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
+        server.ClientConnected += Server_ClientConnected;
+        server.ClientDisconnected += Server_ClientDisconnected;
+        server.StartServer(port);
+
+        UdpClient client = new UdpClient();
+        client.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 1); // Take note that we've updated the group ID here to 1!
+        client.ClientDisconnected += Client_ClientDisconnected;
+        client.VerifyAndListen(port);
+
+        // Send a "dummy" message to all connected clients
+        server.Send(0);
+
+        // Halt execution indefinitely so our application doesn't just immediately close.
+        Thread.Sleep(-1);
+    }
+
+    // Event responding methods from before
+    static void Server_ClientConnected(UdpClient obj)
+    {
+        Console.WriteLine($"Client at {obj.IPEndPoint} connected to the server!");
+    }
+
+    static void Server_ClientDisconnected(UdpClient obj)
+    {
+        Console.WriteLine($"Client at {obj.IPEndPoint} disconnected from the server!");
+    }
+
+    static void Client_ClientDisconnected(UdpClient obj)
+    {
+        Console.WriteLine($"Client instance has been disconnected from the server!");
+    }
+
+    // Net events for our server and client
+    [NetDataEvent(0, 0)]
+    static void PrintPong(UdpClient client)
+    {
+        Console.WriteLine("Pong!");
+    }
+
+    [NetDataEvent(0, 1)]
+    static void PrintPingAndRespond(UdpClient client)
+    {
+        Console.WriteLine("Ping!");
+        client.Send(0);
+    }
+}
+```
+
+While this is far from the prettiest application in the world, it now demonstrates all the basic functionality required to send a packet over the network from our server to our client(s), then for each client to be able to respond accordingly and process that back on our server.
+
+Take note down the bottom how we've created 2 events, one for our server and the other our client. In the `Main` method after verifying our client, we call the `Send` method on our server, which sends a packet to every client that the server knows about. We send an event with an ID of 0, which just so happens to correspond with the attribute we set up on the `PrintPingAndRespond` method (Taking note that the group ID here is 1 on the attribute, and 1 when we call `AddNetEventsFromAssembly` on our client)! At the end of this method, it calls `Send` with an event ID of 0 on the client instance parsed through the function (which for a client event will always be a reference to the client). This is then processed by the server on the recieving end, which will call the `PrintPong` method on the other side (The parsed-in value here for our client will be a reference to the client who sent the message).
+
+As an additional note, you can add parameters to your functions and `Send` calls to parse extra information through down the network! This should be valid for any **value type**, such as numbers, strings and structs. Reference types such as classes, however, cannot be sent in whole, so you'll need to split up the nessecary data yourself.
+
+```cs
+[NetDataEvent(0, 1)]
+static void ExampleMethod1(UdpClient client, int i)
+{
+    Console.WriteLine($"Received the number {i} from the server!");
+    client.Send(0, new DynamicPacket(i, i + 1));
+}
+
+[NetDataEvent(0, 0)]
+static void ExampleMethod2(UdpClient client, int i1, int i2)
+{
+    Console.WriteLine($"Received the numbers {i1} and {i2} from the client!");
+}
+```
 
 ## W.I.P Features
 - Document ***everything*** with XML and create library documentation via the use of doxygen
-- Finish adding examples to this readme
 - Find a way to forcibly stop all asynchronous tasks when the client and server are closed for cleaner shutdown.
+- Rework automatic type conversions and try to minimize the need to use the DynamicPacket class as much as possible to keep things simple.
