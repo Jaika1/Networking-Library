@@ -46,11 +46,7 @@ class Program
         //server.Send(2, "Hello World!", 37);
         //Thread.Sleep(20);
 
-        server.Send(3, (object)new string[]
-        {
-            "This is the first string!",
-            "This is the second string!"
-        });
+        server.Send(4, ByteEnum.Ass);
 
         Thread.Sleep(-1);
     }
@@ -70,10 +66,10 @@ class Program
     {
         Console.WriteLine($"Client instance has been disconnected from the server!");
     }
+}
 
-    enum IntEnum : ulong
-    {
-        Piss,
-        Ass
-    }
+public enum ByteEnum : byte
+{
+    Piss,
+    Ass
 }

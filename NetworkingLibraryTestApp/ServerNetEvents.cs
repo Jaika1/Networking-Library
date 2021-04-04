@@ -24,10 +24,19 @@ namespace NetworkingLibraryTestApp
         }
 
         [NetDataEvent(3)]
-        static void ServerArrayResponse(UdpClient sender, string[] a)
+        static void ServerArrayResponse(UdpClient sender, string[] sa, int[] ia)
         {
-            Console.WriteLine("Data received from client:");
-            Array.ForEach(a, i => Console.WriteLine(i));
+            Console.WriteLine("Data received from client (string):");
+            Array.ForEach(sa, i => Console.WriteLine(i));
+            Console.WriteLine("Data received from client (int):");
+            Array.ForEach(ia, i => Console.WriteLine(i));
+            Console.WriteLine();
+        }
+
+        [NetDataEvent(4)]
+        static void ServerEnumResponse(UdpClient sender, ByteEnum e)
+        {
+            Console.WriteLine($"{sender.IPEndPoint,20}] Enum with value \"{e}\" received from the client!");
         }
     }
 }
