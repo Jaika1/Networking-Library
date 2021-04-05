@@ -70,6 +70,6 @@ class Program
 
 public enum ByteEnum : byte
 {
-    Piss,
-    Ass
+    Value1,
+    Value2
 }
