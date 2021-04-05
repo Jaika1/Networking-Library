@@ -38,10 +38,17 @@ namespace NetworkingLibraryTestApp
         }
 
         [NetDataEvent(4, 1)]
-        static void ClientEnumResponse(UdpClient client, ByteEnum e)
+        static void ClientEnumResponse(UdpClient client, ExampleEnum e)
         {
             Console.WriteLine($"{client.IPEndPoint,20}] Enum with value \"{e}\" received from the server! Will respond with the same data!");
             client.Send(4, e);
+        }
+
+        [NetDataEvent(5, 1)]
+        static void ClientObjectResponse(UdpClient client, ExampleStruct s)
+        {
+            Console.WriteLine($"{client.IPEndPoint,20}] Enum with value \"{s}\" received from the server! Will respond with the same data!");
+            client.Send(5, s);
         }
     }
 }

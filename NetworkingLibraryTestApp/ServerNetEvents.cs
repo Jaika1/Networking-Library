@@ -34,7 +34,7 @@ namespace NetworkingLibraryTestApp
         }
 
         [NetDataEvent(4)]
-        static void ServerEnumResponse(UdpClient sender, ByteEnum e)
+        static void ServerEnumResponse(UdpClient sender, ExampleEnum e)
         {
             Console.WriteLine($"{sender.IPEndPoint,20}] Enum with value \"{e}\" received from the client!");
         }

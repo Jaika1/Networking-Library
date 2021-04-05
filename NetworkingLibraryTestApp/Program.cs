@@ -34,19 +34,7 @@ class Program
         client.ClientDisconnected += Client_ClientDisconnected;
         client.VerifyAndListen(port);
 
-        //// Dataless
-        //server.Send(0);
-        //Thread.Sleep(20);
-
-        //// Boolean
-        //server.Send(1, true);
-        //Thread.Sleep(20);
-
-        //// Multiple types
-        //server.Send(2, "Hello World!", 37);
-        //Thread.Sleep(20);
-
-        server.Send(4, ByteEnum.Ass);
+        server.Send(5, new ExampleStruct(101, "Example string!", ExampleEnum.EnumValue2));
 
         Thread.Sleep(-1);
     }
@@ -68,8 +56,23 @@ class Program
     }
 }
 
-public enum ByteEnum : byte
+public struct ExampleStruct
 {
-    Value1,
-    Value2
+    public int IntValue;
+    public string StringValue;
+    public ExampleEnum CustomEnumValue;
+
+    public ExampleStruct(int i, string s, ExampleEnum e)
+    {
+        IntValue = i;
+        StringValue = s;
+        CustomEnumValue = e;
+    }
+}
+
+public enum ExampleEnum : ulong
+{
+    EnumValue1,
+    EnumValue2,
+    EnumValue3,
 }
