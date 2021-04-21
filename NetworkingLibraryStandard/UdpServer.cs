@@ -56,7 +56,7 @@ namespace NetworkingLibrary
         {
             for (int i = 0; i < clientList.Count; ++i)
             {
-                DisconnectEventHandler(clientList[0]);
+                DisconnectEventHandler(clientList[0], true);
             }
 
             socket.Close();
