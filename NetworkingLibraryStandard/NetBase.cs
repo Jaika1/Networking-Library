@@ -23,6 +23,7 @@ namespace NetworkingLibrary
         public IPEndPoint IPEndPoint => (IPEndPoint)endPoint;
         public ByteConverter Converter => converterInstance;
 
+        public static event Action<string> DebugInfoReceived;
 
         public NetBase(SocketConfiguration socketConfig, uint secret = 0)
         {
@@ -43,7 +44,7 @@ namespace NetworkingLibrary
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex.ToString());
+                    WriteDebug(ex.ToString());
                 }
             }
             socket = new Socket(socketConfiguration.AddressFamily, socketConfiguration.SocketType, socketConfiguration.ProtocolType);
@@ -72,6 +73,12 @@ namespace NetworkingLibrary
                     throw new Exception($"Attempted to add a new net event to this object with event id {attrib.EventId}, but there is already an event with this ID!");
                 }
             }
+        }
+
+        public static void WriteDebug(string msg)
+        {
+            Debug.WriteLine(msg);
+            Array.ForEach(DebugInfoReceived.GetInvocationList(), i => i.DynamicInvoke(msg));
         }
 
 

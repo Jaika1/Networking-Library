@@ -1,5 +1,6 @@
 ﻿using NetworkingLibrary.Helpers;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -41,35 +42,62 @@ namespace NetworkingLibrary
             byte[] verification = BitConverter.GetBytes(Secret);
             socket.SendTo(verification, 0, verification.Length, SocketFlags.None, endPoint);
 
-            byte[] response = new byte[7];
             try
             {
-                socket.ReceiveFrom(response, 0, response.Length, SocketFlags.None, ref endPoint);
+                int attempts = 0;
+                List<byte[]> nonData = new List<byte[]>(); // Used to store non-verif data that may be received first
+                while (attempts <= 5)
+                {
+                    attempts++;
+                    byte[] response = new byte[bufferSize];
+                    int bytesReceived = socket.ReceiveFrom(response, 0, response.Length, SocketFlags.None, ref endPoint);
+                    byte[] usableData = response.Take(bytesReceived).ToArray();
+
+                    if (usableData[0] != 254 && BitConverter.ToUInt16(usableData, 1) != 4)
+                    {
+                        NetBase.WriteDebug($"Non-verification data received, will store for future processing. ({attempts}/5 attempts)");
+                        nonData.Add(usableData);
+                        continue;
+                    }
+
+                    if (BitConverter.ToUInt32(usableData.Skip(3).ToArray(), 0) == Secret)
+                    {
+                        NetBase.WriteDebug($"Verification successful, will now listen for other data...");
+
+                        dataBuffer = new byte[bufferSize];
+                        try
+                        {
+                            socket.BeginReceiveFrom(dataBuffer, 0, dataBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(DataReceivedEvent), null);
+                        }
+                        catch (Exception ex)
+                        {
+                            NetBase.WriteDebug(ex.ToString());
+                            return false;
+                        }
+                        _ = TimeoutLoop();
+
+                        // Process the non-verif data received beforehand
+                        nonData.ForEach(d =>
+                        {
+                            _ = ProcessData(d);
+                        });
+
+                        return true;
+                    }
+                    else
+                    {
+                        NetBase.WriteDebug($"Verification response was incorrect! Received: {string.Join(" ", response)}");
+                        return false;
+                    }
+                }
+                NetBase.WriteDebug($"Verification attempt limit reached!");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.ToString());
-                return false;
+                NetBase.WriteDebug(ex.ToString());
             }
 
-            if (BitConverter.ToUInt32(response.Skip(3).ToArray(), 0) != Secret)
-            {
-                Debug.WriteLine("Verification response was incorrect!");
-                return false;
-            }
-
-            dataBuffer = new byte[bufferSize];
-            try
-            {
-                socket.BeginReceiveFrom(dataBuffer, 0, dataBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(DataReceivedEvent), null);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.ToString());
-            }
-            _ = TimeoutLoop();
-
-            return true;
+            return false;
         }
 
         public void Disconnect()
@@ -87,7 +115,7 @@ namespace NetworkingLibrary
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.ToString());
+                NetBase.WriteDebug(ex.ToString());
             }
 
             dataBuffer = new byte[bufferSize];
@@ -97,50 +125,13 @@ namespace NetworkingLibrary
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.ToString());
+                NetBase.WriteDebug(ex.ToString());
             }
         }
 
         private async Task ProcessData(byte[] data)
         {
-            #region old method
-            //if (data.Length < 3) return;
-
-            //byte eventId = data[0];
-            //ushort dataLength = BitConverter.ToUInt16(data, 1); // Used here for error checking.
-            //byte[] usefulData = data.Skip(3).ToArray();
-            //if (usefulData.Length != dataLength) return;
-
-            //if (netDataEvents.ContainsKey(eventId))
-            //{
-            //    lastMessageReceived = DateTime.UtcNow;
-
-            //    MethodInfo netEventMethod = netDataEvents[eventId];
-            //    ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
-            //    if (parameters.Length == 0)
-            //    {
-            //        netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, new object[] { this });
-            //    }
-            //    else if (parameters.Length == 1)
-            //    {
-            //        object o = DynamicPacket.ByteArrayToObject(usefulData);
-            //        netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, new object[] { this, o });
-            //    }
-            //    else
-            //    {
-            //        object[] objects = new object[1 + parameters.Length];
-            //        objects[0] = this;
-            //        for (int i = 0; i < parameters.Length; ++i)
-            //        {
-            //            ushort paramDataLength = BitConverter.ToUInt16(usefulData, 0);
-            //            byte[] paramData = usefulData.Skip(2).Take(paramDataLength).ToArray();
-            //            objects[1 + i] = DynamicPacket.ByteArrayToObject(paramData);
-            //            usefulData = usefulData.Skip(2 + paramDataLength).ToArray();
-            //        }
-            //        netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, objects);
-            //    }
-            //}
-            #endregion
+            NetBase.WriteDebug($"Client received data: {string.Join(" ", data)}");
 
             if (data.Length < 3)
                 return;
@@ -208,7 +199,7 @@ namespace NetworkingLibrary
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.ToString());
+                NetBase.WriteDebug(ex.ToString());
             }
         }
 

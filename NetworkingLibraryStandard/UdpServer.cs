@@ -47,7 +47,7 @@ namespace NetworkingLibrary
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.ToString());
+                NetBase.WriteDebug(ex.ToString());
             }
             _ = PingLoop();
         }
@@ -73,7 +73,7 @@ namespace NetworkingLibrary
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.ToString());
+                NetBase.WriteDebug(ex.ToString());
             }
 
             dataBuffer = new byte[bufferSize];
@@ -83,7 +83,7 @@ namespace NetworkingLibrary
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.ToString());
+                NetBase.WriteDebug(ex.ToString());
             }
         }
 
@@ -94,11 +94,11 @@ namespace NetworkingLibrary
             {
                 if (data.Length != 4 || BitConverter.ToUInt32(data, 0) != Secret) 
                 {
-                    Debug.WriteLine($"Client attempted to connect from {clientEndPoint} with a bad secret.");
+                    NetBase.WriteDebug($"Client attempted to connect from {clientEndPoint} with a bad secret.");
                     return;
                 }
                 UdpClient rCl = new UdpClient(socket, clientEndPoint);
-                rCl.SendRaw(0, BitConverter.GetBytes(Secret));
+                rCl.SendRaw(254, BitConverter.GetBytes(Secret));
                 clientList.Add(rCl);
 
                 if (ClientConnected != null)
@@ -163,7 +163,7 @@ namespace NetworkingLibrary
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex.ToString());
+                    NetBase.WriteDebug(ex.ToString());
                 }
             }
         }
