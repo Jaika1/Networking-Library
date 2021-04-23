@@ -78,7 +78,9 @@ namespace NetworkingLibrary
         public static void WriteDebug(string msg)
         {
             Debug.WriteLine(msg);
-            Array.ForEach(DebugInfoReceived.GetInvocationList(), i => i.DynamicInvoke(msg));
+
+            if (DebugInfoReceived != null)
+                Array.ForEach(DebugInfoReceived.GetInvocationList(), i => i.DynamicInvoke(msg));
         }
 
 

@@ -21,6 +21,8 @@ class Program
     {
         int port = 7235;
 
+        NetBase.DebugInfoReceived += NetBase_DebugInfoReceived;
+
         UdpServer server = new UdpServer();
         server.TimeoutDelay = 10000.0f;
         server.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly(), 0);
@@ -34,9 +36,14 @@ class Program
         client.ClientDisconnected += Client_ClientDisconnected;
         client.VerifyAndListen(port);
 
-        server.Send(5, new ExampleStruct(101, "Example string!", ExampleEnum.EnumValue2));
+        server.Send(2, "Example string!", 10);
 
         Thread.Sleep(-1);
+    }
+
+    private static void NetBase_DebugInfoReceived(string obj)
+    {
+        Console.WriteLine(obj);
     }
 
     // Event responding methods
