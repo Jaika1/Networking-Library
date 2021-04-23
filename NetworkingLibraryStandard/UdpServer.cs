@@ -89,47 +89,54 @@ namespace NetworkingLibrary
 
         private async Task ProcessData(byte[] data, EndPoint clientEndPoint)
         {
-            UdpClient clientRef = clientList.Find(c => c.EndPoint.Equals(clientEndPoint));
-            if (clientRef == null)
+            try
             {
-                if (data.Length != 4 || BitConverter.ToUInt32(data, 0) != Secret) 
+                UdpClient clientRef = clientList.Find(c => c.EndPoint.Equals(clientEndPoint));
+                if (clientRef == null)
                 {
-                    NetBase.WriteDebug($"Client attempted to connect from {clientEndPoint} with a bad secret.");
-                    return;
-                }
-                UdpClient rCl = new UdpClient(socket, clientEndPoint);
-                rCl.SendRaw(254, BitConverter.GetBytes(Secret));
-                clientList.Add(rCl);
+                    if (data.Length != 4 || BitConverter.ToUInt32(data, 0) != Secret)
+                    {
+                        NetBase.WriteDebug($"Client attempted to connect from {clientEndPoint} with a bad secret.");
+                        return;
+                    }
+                    UdpClient rCl = new UdpClient(socket, clientEndPoint);
+                    rCl.SendRaw(254, BitConverter.GetBytes(Secret));
+                    clientList.Add(rCl);
 
-                if (ClientConnected != null)
-                    Array.ForEach(ClientConnected.GetInvocationList(), d => d.DynamicInvoke(rCl));
+                    if (ClientConnected != null)
+                        Array.ForEach(ClientConnected.GetInvocationList(), d => d.DynamicInvoke(rCl));
+                }
+                else
+                {
+                    if (data.Length < 3)
+                        return;
+
+                    byte eventId = data[0];
+                    ushort dataLength = BitConverter.ToUInt16(data, 1);
+                    byte[] netData = data.Skip(3).ToArray();
+                    if (dataLength != netData.Length)
+                        return;
+
+                    if (netDataEvents.ContainsKey(eventId))
+                    {
+                        clientRef.lastMessageReceived = DateTime.UtcNow;
+
+                        MethodInfo netEventMethod = netDataEvents[eventId];
+                        ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
+                        Type[] parameterTypes = (from p in parameters
+                                                 select p.ParameterType).ToArray();
+
+                        object[] instances = DynamicPacket.GetInstancesFromData(netData, converterInstance, parameterTypes);
+                        object[] instancesWithNetBase = new object[1 + instances.Length];
+                        instancesWithNetBase[0] = clientRef;
+                        instances.CopyTo(instancesWithNetBase, 1);
+                        netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, instancesWithNetBase);
+                    }
+                }
             }
-            else
+            catch (Exception ex)
             {
-                if (data.Length < 3)
-                    return;
-
-                byte eventId = data[0];
-                ushort dataLength = BitConverter.ToUInt16(data, 1);
-                byte[] netData = data.Skip(3).ToArray();
-                if (dataLength != netData.Length)
-                    return;
-
-                if (netDataEvents.ContainsKey(eventId))
-                {
-                    clientRef.lastMessageReceived = DateTime.UtcNow;
-
-                    MethodInfo netEventMethod = netDataEvents[eventId];
-                    ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
-                    Type[] parameterTypes = (from p in parameters
-                                             select p.ParameterType).ToArray();
-
-                    object[] instances = DynamicPacket.GetInstancesFromData(netData, converterInstance, parameterTypes);
-                    object[] instancesWithNetBase = new object[1 + instances.Length];
-                    instancesWithNetBase[0] = clientRef;
-                    instances.CopyTo(instancesWithNetBase, 1);
-                    netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, instancesWithNetBase);
-                }
+                NetBase.WriteDebug(ex.ToString());
             }
         }
 

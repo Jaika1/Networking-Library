@@ -131,32 +131,39 @@ namespace NetworkingLibrary
 
         private async Task ProcessData(byte[] data)
         {
-            NetBase.WriteDebug($"Client received data: {string.Join(" ", data)}");
-
-            if (data.Length < 3)
-                return;
-
-            byte eventId = data[0];
-            ushort dataLength = BitConverter.ToUInt16(data, 1);
-            byte[] netData = data.Skip(3).ToArray();
-            if (dataLength != netData.Length)
-                return;
-
-            if (netDataEvents.ContainsKey(eventId))
+            try 
             {
-                lastMessageReceived = DateTime.UtcNow;
+                NetBase.WriteDebug($"Client received data: {string.Join(" ", data)}");
 
-                MethodInfo netEventMethod = netDataEvents[eventId];
-                ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
-                Type[] parameterTypes = (from p in parameters
-                                         select p.ParameterType).ToArray();
+                if (data.Length < 3)
+                    return;
 
-                object[] instances = DynamicPacket.GetInstancesFromData(netData, converterInstance, parameterTypes);
+                byte eventId = data[0];
+                ushort dataLength = BitConverter.ToUInt16(data, 1);
+                byte[] netData = data.Skip(3).ToArray();
+                if (dataLength != netData.Length)
+                    return;
 
-                object[] instancesWithNetBase = new object[1 + instances.Length];
-                instancesWithNetBase[0] = this;
-                instances.CopyTo(instancesWithNetBase, 1);
-                netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, instancesWithNetBase);
+                if (netDataEvents.ContainsKey(eventId))
+                {
+                    lastMessageReceived = DateTime.UtcNow;
+
+                    MethodInfo netEventMethod = netDataEvents[eventId];
+                    ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
+                    Type[] parameterTypes = (from p in parameters
+                                             select p.ParameterType).ToArray();
+
+                    object[] instances = DynamicPacket.GetInstancesFromData(netData, converterInstance, parameterTypes);
+
+                    object[] instancesWithNetBase = new object[1 + instances.Length];
+                    instancesWithNetBase[0] = this;
+                    instances.CopyTo(instancesWithNetBase, 1);
+                    netEventMethod.Invoke(netEventMethod.IsStatic ? null : this, instancesWithNetBase);
+                }
+            }
+            catch (Exception ex)
+            {
+                NetBase.WriteDebug(ex.ToString());
             }
         }
 
