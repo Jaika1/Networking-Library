@@ -18,7 +18,7 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
             Type underlyingType = e.GetType().GetEnumUnderlyingType();
 
             if (!ParentModule.HasConverterOfType(underlyingType))
-                throw new Exception("Invalid element type!");
+                NetBase.WriteDebug($"Invalid element type for enum conversion! ({underlyingType})", true);
 
             List<byte> data = new List<byte>();
 
@@ -32,7 +32,7 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
             Type underlyingType = type.GetEnumUnderlyingType();
 
             if (!ParentModule.HasConverterOfType(underlyingType))
-                throw new Exception("Invalid element type!");
+                NetBase.WriteDebug($"Invalid element type for enum conversion! ({underlyingType})", true);
 
             return ParentModule.ObjectFromBytes(underlyingType, data, length);
         }

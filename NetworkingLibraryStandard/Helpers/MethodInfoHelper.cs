@@ -13,7 +13,8 @@ namespace NetworkingLibrary.Helpers
             if (member != null)
                 return member.Method;
 
-            throw new ArgumentException("Expression is not a method", "expression");
+            NetBase.WriteDebug("Expression provided to MethodInfoHelper.GetMethodInfo<T> is not a method!", true);
+            return null; // Will never be hit, but is done to make C# happy that it's getting a return type.
         }
     }
 }

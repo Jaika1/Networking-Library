@@ -35,7 +35,7 @@ namespace NetworkingLibrary.Helpers.Conversion
         {
             if (HasConverterOfType(converter.T))
             {
-                throw new Exception($"A converter for type {converter.T.FullName} has already been added!");
+                NetBase.WriteDebug($"A converter for type {converter.T.FullName} has already been added!", true);
             }
 
             converter.ParentModule = this;
@@ -47,7 +47,7 @@ namespace NetworkingLibrary.Helpers.Conversion
             Type instanceType = instance.GetType();
 
             if (!HasConverterOfType(instanceType))
-                throw new Exception($"No conversion method exists for type of {instanceType.FullName}!");
+                NetBase.WriteDebug($"No conversion method exists for type of {instanceType.FullName}!", true);
 
             return knownConverters.First(c => c.T == instanceType || c.T == instanceType.BaseType).ConvertToBytes(instance, includeLength);
         }
@@ -61,7 +61,7 @@ namespace NetworkingLibrary.Helpers.Conversion
         public (object Instance, int BytesParsed) ObjectFromBytes(Type instanceType, byte[] data, int length = -1)
         {
             if (!HasConverterOfType(instanceType))
-                throw new Exception($"No conversion method exists for type of {instanceType.FullName}!");
+                NetBase.WriteDebug($"No conversion method exists for type of {instanceType.FullName}!", true);
 
             return knownConverters.First(c => c.T == instanceType || c.T == instanceType.BaseType).ObjectFromBytes(data, length, instanceType);
         }

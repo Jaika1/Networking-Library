@@ -25,34 +25,8 @@ namespace NetworkingLibrary
 
         internal byte[] GetRawData(ByteConverter converter)
         {
-            #region old method
-            //List<byte> dataArray = new List<byte>();
-
-            //if (dataCollection.Count == 1)
-            //{
-            //    dataArray.AddRange(ObjectToByteArray(dataCollection[0]));
-            //}
-            //else
-            //{
-            //    for (int i = 0; i < dataCollection.Count; ++i)
-            //    {
-            //        object o = dataCollection[i];
-            //        byte[] objectData = ObjectToByteArray(o);
-            //        if (objectData.Length > ushort.MaxValue) 
-            //            throw new Exception($"One object contained in this dynamic packet at position {i} takes up more than {ushort.MaxValue} bytes, which is absuredly large for any packet to begin with. Consider splitting this data into more managable segments manually, or optimise by only sending nessecary data from the object. (Object type is {o.GetType().FullName})");
-            //        ushort dataLength = (ushort)objectData.Length;
-            //        byte[] addData = new byte[2 + dataLength];
-            //        BitConverter.GetBytes(dataLength).CopyTo(addData, 0);
-            //        objectData.CopyTo(addData, 2);
-            //        dataArray.AddRange(addData);
-            //    }
-            //}
-
-            //return dataArray.ToArray();
-            #endregion
-
             if (dataCollection.Any(x => !converter.HasConverterOfType(x.GetType())))
-                throw new Exception("The given converter couldn't parse one of the types of data provided!");
+                NetBase.WriteDebug($"The given converter couldn't parse one of the types of data provided!{Environment.NewLine}{string.Join(Environment.NewLine, dataCollection.Select(x => x.GetType()))}", true);
 
             if (dataCollection.Count == 0)
                 return new byte[0];
@@ -95,7 +69,7 @@ namespace NetworkingLibrary
         internal static object[] GetInstancesFromData(byte[] data, ByteConverter converter, params Type[] types)
         {
             if (types.Any(x => !converter.HasConverterOfType(x)))
-                throw new Exception("The given converter couldn't parse one of the provided types!");
+                NetBase.WriteDebug($"The given converter couldn't parse one of the provided types!{Environment.NewLine}{string.Join(Environment.NewLine, types.AsEnumerable())}", true);
 
             if (types.Count() == 0)
                 return new object[0];

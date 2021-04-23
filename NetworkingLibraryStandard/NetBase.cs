@@ -70,17 +70,20 @@ namespace NetworkingLibrary
                 }
                 else
                 {
-                    throw new Exception($"Attempted to add a new net event to this object with event id {attrib.EventId}, but there is already an event with this ID!");
+                    NetBase.WriteDebug($"Attempted to add a new net event to this object with event id {attrib.EventId}, but there is already an event with this ID! Make sure you're not adding the same event twice within the same group ID, and that no events use id 254 or 255!", true);
                 }
             }
         }
 
-        public static void WriteDebug(string msg)
+        public static void WriteDebug(string msg, bool throwException = false)
         {
             Debug.WriteLine(msg);
 
             if (DebugInfoReceived != null)
                 Array.ForEach(DebugInfoReceived.GetInvocationList(), i => i.DynamicInvoke(msg));
+
+            if (throwException)
+                throw new Exception(msg);
         }
 
 
@@ -91,6 +94,6 @@ namespace NetworkingLibrary
         public void Send(byte packetId, DynamicPacket packet) => SendRaw(packetId, packet.GetRawData(converterInstance));
 
         internal virtual void SendRaw(byte packetId, byte[] rawData)
-            => throw new NotImplementedException("The inheriting class did not override this method! This is most certainly an oversight by the developer who created the inheriting class.");
+            => NetBase.WriteDebug("The inheriting class did not override this method! This is most certainly an oversight by the developer who created the inheriting class. (From NetBase)", true);
     }
 }

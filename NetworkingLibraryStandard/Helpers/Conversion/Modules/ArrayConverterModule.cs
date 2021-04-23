@@ -18,7 +18,7 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
             Type elementType = instance.GetType().GetElementType();
 
             if (!ParentModule.HasConverterOfType(elementType))
-                throw new Exception("Invalid element type!");
+                NetBase.WriteDebug($"Invalid element type in array conversion! ({elementType})", true);
 
             List<byte> data = new List<byte>();
 
@@ -35,7 +35,7 @@ namespace NetworkingLibrary.Helpers.Conversion.Modules
             Type elementType = type.GetElementType();
 
             if (!ParentModule.HasConverterOfType(elementType))
-                throw new Exception("Invalid element type!");
+                NetBase.WriteDebug($"Invalid element type in array conversion! ({elementType})", true);
 
             //The 'length' parameter here is used to determine how many bytes at the start of the array are for the length of the string data
             (ushort Instance, int BytesParsed) t = ParentModule.ObjectFromBytes<ushort>(data);
