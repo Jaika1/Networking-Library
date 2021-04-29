@@ -203,6 +203,7 @@ namespace NetworkingLibrary
             try
             {
                 socket.BeginSendTo(buffer, 0, buffer.Length, SocketFlags.None, endPoint, new AsyncCallback(SendToEvent), null);
+                NetBase.WriteDebug($"Send data to {IPEndPoint}: {string.Join(" ", buffer)}");
             }
             catch (Exception ex)
             {

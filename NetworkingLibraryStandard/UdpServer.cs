@@ -38,11 +38,11 @@ namespace NetworkingLibrary
 
         public void StartServer(IPAddress bindIp, int bindPort)
         {
-            endPoint = new IPEndPoint(bindIp, bindPort);
-            socket.Bind(endPoint);
-            dataBuffer = new byte[bufferSize];
             try
             {
+                endPoint = new IPEndPoint(bindIp, bindPort);
+                socket.Bind(endPoint);
+                dataBuffer = new byte[bufferSize];
                 socket.BeginReceiveFrom(dataBuffer, 0, dataBuffer.Length, SocketFlags.None, ref endPoint, new AsyncCallback(DataReceivedEvent), null);
             }
             catch (Exception ex)
@@ -99,6 +99,7 @@ namespace NetworkingLibrary
                     if (data.Length != 4 || BitConverter.ToUInt32(data, 0) != Secret)
                     {
                         NetBase.WriteDebug($"Client attempted to connect from {clientEndPoint} with a bad secret.");
+
                         return;
                     }
                     UdpClient rCl = new UdpClient(socket, clientEndPoint);
