@@ -91,6 +91,8 @@ namespace NetworkingLibrary
         {
             try
             {
+                NetBase.WriteDebug($"Server received data: {string.Join(" ", data)}");
+
                 UdpClient clientRef = clientList.Find(c => c.EndPoint.Equals(clientEndPoint));
                 if (clientRef == null)
                 {
