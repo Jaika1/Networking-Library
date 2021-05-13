@@ -38,12 +38,12 @@ namespace NetworkingLibrary
 
         public bool VerifyAndListen(IPAddress remoteIp, int port)
         {
-            endPoint = new IPEndPoint(remoteIp, port);
-            byte[] verification = BitConverter.GetBytes(Secret);
-            socket.SendTo(verification, 0, verification.Length, SocketFlags.None, endPoint);
-
             try
             {
+                endPoint = new IPEndPoint(remoteIp, port);
+                byte[] verification = BitConverter.GetBytes(Secret);
+                socket.SendTo(verification, 0, verification.Length, SocketFlags.None, endPoint);
+
                 int attempts = 0;
                 List<byte[]> nonData = new List<byte[]>(); // Used to store non-verif data that may be received first
                 while (attempts <= 5)
