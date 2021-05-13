@@ -34,9 +34,9 @@ namespace NetworkingLibrary
         }
 
 
-        public void StartServer(int bindPort) => StartServer(IPAddress.Any, bindPort);
+        public bool StartServer(int bindPort) => StartServer(IPAddress.Any, bindPort);
 
-        public void StartServer(IPAddress bindIp, int bindPort)
+        public bool StartServer(IPAddress bindIp, int bindPort)
         {
             try
             {
@@ -48,8 +48,10 @@ namespace NetworkingLibrary
             catch (Exception ex)
             {
                 NetBase.WriteDebug(ex.ToString());
+                return false;
             }
             _ = PingLoop();
+            return true;
         }
 
         public void CloseServer()
