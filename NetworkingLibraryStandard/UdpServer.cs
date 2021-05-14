@@ -105,7 +105,7 @@ namespace NetworkingLibrary
                         return;
                     }
                     UdpClient rCl = new UdpClient(socket, clientEndPoint);
-                    rCl.SendRaw(254, BitConverter.GetBytes(Secret));
+                    rCl.SendRaw(254, true, BitConverter.GetBytes(Secret));
                     clientList.Add(rCl);
 
                     if (ClientConnected != null)
@@ -165,13 +165,13 @@ namespace NetworkingLibrary
             }
         }
 
-        internal override void SendRaw(byte packetId, byte[] rawData)
+        internal override void SendRaw(byte packetId, bool redundant, byte[] rawData)
         {
             for (int i = 0; i < clientList.Count; ++i)
             {
                 try
                 {
-                    clientList[i].SendRaw(packetId, rawData);
+                    clientList[i].SendRaw(packetId, redundant, rawData);
                 }
                 catch (Exception ex)
                 {

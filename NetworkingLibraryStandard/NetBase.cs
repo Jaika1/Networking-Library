@@ -18,6 +18,9 @@ namespace NetworkingLibrary
         protected EndPoint endPoint;
         protected ByteConverter converterInstance = new ByteConverter();
 
+        protected sbyte redundantId = 0;
+        protected List<sbyte> redundantIds = new List<sbyte>();
+
         public uint Secret => secret;
         public EndPoint EndPoint => endPoint;
         public IPEndPoint IPEndPoint => (IPEndPoint)endPoint;
@@ -32,7 +35,6 @@ namespace NetworkingLibrary
             socket = new Socket(socketConfig.AddressFamily, socketConfig.SocketType, socketConfig.ProtocolType);
             socket.ReceiveTimeout = 10000;
         }
-
 
         public void Reset()
         {
@@ -87,13 +89,19 @@ namespace NetworkingLibrary
         }
 
 
-        public void Send(byte packetId) => SendRaw(packetId, new byte[0]);
+        public void Send(byte packetId) => SendRaw(packetId, false, new byte[0]);
 
         public void Send(byte packetId, params object[] data) => Send(packetId, new DynamicPacket(data));
 
-        public void Send(byte packetId, DynamicPacket packet) => SendRaw(packetId, packet.GetRawData(converterInstance));
+        public void Send(byte packetId, DynamicPacket packet) => SendRaw(packetId, false, packet.GetRawData(converterInstance));
 
-        internal virtual void SendRaw(byte packetId, byte[] rawData)
+        public void SendRedundant(byte packetId) => SendRaw(packetId, true, new byte[0]);
+
+        public void SendRedundant(byte packetId, params object[] data) => SendRedundant(packetId, new DynamicPacket(data));
+
+        public void SendRedundant(byte packetId, DynamicPacket packet) => SendRaw(packetId, true, packet.GetRawData(converterInstance));
+
+        internal virtual void SendRaw(byte packetId, bool redundant, byte[] rawData)
             => NetBase.WriteDebug("The inheriting class did not override this method! This is most certainly an oversight by the developer who created the inheriting class. (From NetBase)", true);
     }
 }

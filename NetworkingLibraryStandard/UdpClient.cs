@@ -193,7 +193,7 @@ namespace NetworkingLibrary
             }
         }
 
-        internal override void SendRaw(byte packetId, byte[] rawData)
+        internal override void SendRaw(byte packetId, bool redundant, byte[] rawData)
         {
             byte[] buffer = new byte[3 + rawData.Length];
             buffer[0] = packetId;
