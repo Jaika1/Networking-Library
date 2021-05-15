@@ -29,8 +29,9 @@ namespace NetworkingLibrary
         public UdpServer(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret)
         {
             this.bufferSize = bufferSize;
-            netDataEvents.Add(254, MethodInfoHelper.GetMethodInfo<UdpServer>(x => x.PingEventHandler(null)));
-            netDataEvents.Add(255, MethodInfoHelper.GetMethodInfo<UdpServer>(x => x.DisconnectEventHandler(null, false)));
+            systemDataEvents.Add(0, MethodInfoHelper.GetMethodInfo<UdpServer>(x => x.PingEventHandler(null)));
+            systemDataEvents.Add(1, MethodInfoHelper.GetMethodInfo<UdpServer>(x => x.DisconnectEventHandler(null, false)));
+            systemDataEvents.Add(2, MethodInfoHelper.GetMethodInfo<UdpServer>(x => x.ReliableDataResponseReceived(null, 0L)));
         }
 
 
@@ -54,7 +55,7 @@ namespace NetworkingLibrary
             return true;
         }
 
-        public void CloseServer()
+        public override void Close()
         {
             for (int i = 0; i < clientList.Count; ++i)
             {
@@ -93,7 +94,7 @@ namespace NetworkingLibrary
         {
             try
             {
-                NetBase.WriteDebug($"Server received data: {string.Join(" ", data)}");
+                NetBase.WriteDebug($"Server received data: {PacketToStringRep(data)}");
 
                 UdpClient clientRef = clientList.Find(c => c.EndPoint.Equals(clientEndPoint));
                 if (clientRef == null)
@@ -105,7 +106,7 @@ namespace NetworkingLibrary
                         return;
                     }
                     UdpClient rCl = new UdpClient(socket, clientEndPoint);
-                    rCl.SendRaw(254, true, BitConverter.GetBytes(Secret));
+                    rCl.SendRaw(254, PacketFlags.None, BitConverter.GetBytes(Secret));
                     clientList.Add(rCl);
 
                     if (ClientConnected != null)
@@ -113,20 +114,33 @@ namespace NetworkingLibrary
                 }
                 else
                 {
-                    if (data.Length < 3)
+                    if (data.Length < 12)
                         return;
 
                     byte eventId = data[0];
-                    ushort dataLength = BitConverter.ToUInt16(data, 1);
-                    byte[] netData = data.Skip(3).ToArray();
+                    PacketFlags packetFlags = (PacketFlags)data[1];
+                    long packetId = BitConverter.ToInt64(data, 2);
+                    ushort dataLength = BitConverter.ToUInt16(data, 10);
+                    byte[] netData = data.Skip(12).ToArray();
+
                     if (dataLength != netData.Length)
                         return;
 
-                    if (netDataEvents.ContainsKey(eventId))
+                    Dictionary<byte, MethodInfo> eventsRef = packetFlags.HasFlag(PacketFlags.SystemMessage) ? systemDataEvents : netDataEvents;
+
+                    if (packetFlags.HasFlag(PacketFlags.Reliable))
+                        clientRef.SendF(2, PacketFlags.SystemMessage, packetId);
+
+
+                    if (eventsRef.ContainsKey(eventId) && !clientRef.receivedReliablePacketInfo.Contains(packetId))
                     {
+                        if (packetFlags.HasFlag(PacketFlags.Reliable))
+                            if (!clientRef.receivedReliablePacketInfo.Contains(packetId))
+                                clientRef.receivedReliablePacketInfo.Add(packetId);
+
                         clientRef.lastMessageReceived = DateTime.UtcNow;
 
-                        MethodInfo netEventMethod = netDataEvents[eventId];
+                        MethodInfo netEventMethod = eventsRef[eventId];
                         ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
                         Type[] parameterTypes = (from p in parameters
                                                  select p.ParameterType).ToArray();
@@ -159,19 +173,19 @@ namespace NetworkingLibrary
                     }
                 }
 
-                Send(254);
+                SendF(0, PacketFlags.SystemMessage);
 
                 await Task.Delay(TimeSpan.FromSeconds(PingFrequency));
             }
         }
 
-        internal override void SendRaw(byte packetId, bool redundant, byte[] rawData)
+        public override void SendRaw(byte packetId, PacketFlags flags, byte[] rawData)
         {
             for (int i = 0; i < clientList.Count; ++i)
             {
                 try
                 {
-                    clientList[i].SendRaw(packetId, redundant, rawData);
+                    clientList[i].SendRaw(packetId, flags, rawData);
                 }
                 catch (Exception ex)
                 {
@@ -181,22 +195,30 @@ namespace NetworkingLibrary
         }
 
 
-        protected virtual void PingEventHandler(UdpClient client)
+        protected void PingEventHandler(UdpClient client)
         {
             client.lastMessageReceived = DateTime.UtcNow;
         }
 
-        protected virtual void DisconnectEventHandler(UdpClient client, bool remoteTrigger = false)
+        protected void DisconnectEventHandler(UdpClient client, bool remoteTrigger = false)
         {
             if (!remoteTrigger)
-                client.Send(255);
+                client.SendF(1, PacketFlags.SystemMessage);
 
             int cIndex = clientList.FindIndex(c => c == client);
             if (cIndex > -1)
                 clientList.RemoveAt(cIndex);
 
+            client.sentReliablePacketInfo.Clear();
+
             if (ClientDisconnected != null)
                 Array.ForEach(ClientDisconnected.GetInvocationList(), d => d.DynamicInvoke(client));
+        }
+
+        protected void ReliableDataResponseReceived(UdpClient client, long packetID)
+        {
+            //if (client.sentReliablePacketInfo.Contains(packetID))
+            //    client.sentReliablePacketInfo.Remove(packetID);
         }
     }
 }

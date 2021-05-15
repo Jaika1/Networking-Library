@@ -12,6 +12,11 @@ namespace NetworkingLibrary
 {
     public class UdpClient : NetBase
     {
+#if DEBUG
+        Random rand = new Random();
+        public double DropChance = 0.0;
+#endif
+
         private int bufferSize;
         private byte[] dataBuffer;
         internal DateTime lastMessageReceived = DateTime.UtcNow;
@@ -24,8 +29,9 @@ namespace NetworkingLibrary
         public UdpClient(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret)
         {
             this.bufferSize = bufferSize;
-            netDataEvents.Add(254, MethodInfoHelper.GetMethodInfo<UdpClient>(x => x.PingEventHandler(null)));
-            netDataEvents.Add(255, MethodInfoHelper.GetMethodInfo<UdpClient>(x => x.DisconnectEventHandler(null, false)));
+            systemDataEvents.Add(0, MethodInfoHelper.GetMethodInfo<UdpClient>(x => x.PingEventHandler(null)));
+            systemDataEvents.Add(1, MethodInfoHelper.GetMethodInfo<UdpClient>(x => x.DisconnectEventHandler(null, false)));
+            systemDataEvents.Add(2, MethodInfoHelper.GetMethodInfo<UdpClient>(x => x.ReliableDataResponseReceived(null, 0L)));
         }
 
         internal UdpClient(Socket serverSocket, EndPoint clientEp) : base(SocketConfiguration.UdpConfiguration, 0)
@@ -60,7 +66,7 @@ namespace NetworkingLibrary
                         continue;
                     }
 
-                    if (BitConverter.ToUInt32(usableData.Skip(3).ToArray(), 0) == Secret)
+                    if (BitConverter.ToUInt32(usableData.Skip(12).ToArray(), 0) == Secret)
                     {
                         NetBase.WriteDebug($"Verification successful, will now listen for other data...");
 
@@ -100,10 +106,12 @@ namespace NetworkingLibrary
             return false;
         }
 
-        public void Disconnect()
+        public override void Close()
         {
-            Send(255, new DynamicPacket(true));
-            DisconnectEventHandler(this);
+            SendF(1, PacketFlags.SystemMessage, true);
+
+            if (socket != null)
+                DisconnectEventHandler(this);
         }
 
         private void DataReceivedEvent(IAsyncResult ar)
@@ -111,7 +119,16 @@ namespace NetworkingLibrary
             try
             {
                 int i = socket.EndReceive(ar);
+
+#if DEBUG
+                // Simulated packet loss
+                if (DropChance < rand.NextDouble())
+                {
+                    _ = ProcessData(dataBuffer.Take(i).ToArray());
+                }
+#else
                 _ = ProcessData(dataBuffer.Take(i).ToArray());
+#endif
             }
             catch (Exception ex)
             {
@@ -133,22 +150,34 @@ namespace NetworkingLibrary
         {
             try 
             {
-                NetBase.WriteDebug($"Client received data: {string.Join(" ", data)}");
+                NetBase.WriteDebug($"Client received data: {PacketToStringRep(data)}");
 
-                if (data.Length < 3)
+                if (data.Length < 12)
                     return;
 
                 byte eventId = data[0];
-                ushort dataLength = BitConverter.ToUInt16(data, 1);
-                byte[] netData = data.Skip(3).ToArray();
+                PacketFlags packetFlags = (PacketFlags)data[1];
+                long packetId = BitConverter.ToInt64(data, 2);
+                ushort dataLength = BitConverter.ToUInt16(data, 10);
+                byte[] netData = data.Skip(12).ToArray();
+
                 if (dataLength != netData.Length)
                     return;
 
-                if (netDataEvents.ContainsKey(eventId))
+                Dictionary<byte, MethodInfo> eventsRef = packetFlags.HasFlag(PacketFlags.SystemMessage) ? systemDataEvents : netDataEvents;
+
+                if (packetFlags.HasFlag(PacketFlags.Reliable))
+                    SendF(2, PacketFlags.SystemMessage, packetId);
+
+                if (eventsRef.ContainsKey(eventId) && !receivedReliablePacketInfo.Contains(packetId))
                 {
+                    if (packetFlags.HasFlag(PacketFlags.Reliable))
+                        if (!receivedReliablePacketInfo.Contains(packetId))
+                            receivedReliablePacketInfo.Add(packetId);
+
                     lastMessageReceived = DateTime.UtcNow;
 
-                    MethodInfo netEventMethod = netDataEvents[eventId];
+                    MethodInfo netEventMethod = eventsRef[eventId];
                     ParameterInfo[] parameters = netEventMethod.GetParameters().Skip(1).ToArray();
                     Type[] parameterTypes = (from p in parameters
                                              select p.ParameterType).ToArray();
@@ -185,7 +214,7 @@ namespace NetworkingLibrary
             {
                 if ((DateTime.UtcNow - lastMessageReceived).TotalSeconds >= TimeoutDelay)
                 {
-                    Disconnect();
+                    Close();
                     return;
                 }
 
@@ -193,17 +222,29 @@ namespace NetworkingLibrary
             }
         }
 
-        internal override void SendRaw(byte packetId, bool redundant, byte[] rawData)
+        public override void SendRaw(byte eventId, PacketFlags flags, byte[] rawData)
         {
-            byte[] buffer = new byte[3 + rawData.Length];
-            buffer[0] = packetId;
-            BitConverter.GetBytes((ushort)rawData.Length).CopyTo(buffer, 1);
-            rawData.CopyTo(buffer, 3);
+            byte[] buffer = new byte[12 + rawData.Length];
+            long packetId = DateTime.UtcNow.Ticks;
+
+            // PACKET HEADER CONSTRUCTION: 12 BYTES
+            /* 0x00 1           EVENT_ID    */ buffer[0] = eventId;
+            /* 0x01 1           FLAGS       */ buffer[1] = (byte)flags;
+            /* 0x02 8           PACKET_ID   */ BitConverter.GetBytes(packetId).CopyTo(buffer, 2);
+            /* 0x0A 2           DATA_LENGTH */ BitConverter.GetBytes((ushort)rawData.Length).CopyTo(buffer, 10);
+
+            /* 0x0C DATA_LENGTH DATA        */ rawData.CopyTo(buffer, 12);
 
             try
             {
                 socket.BeginSendTo(buffer, 0, buffer.Length, SocketFlags.None, endPoint, new AsyncCallback(SendToEvent), null);
-                NetBase.WriteDebug($"Send data to {IPEndPoint}: {string.Join(" ", buffer)}");
+                NetBase.WriteDebug($"Send data to {IPEndPoint}: {PacketToStringRep(buffer)}");
+
+                if (flags.HasFlag(PacketFlags.Reliable))
+                {
+                    sentReliablePacketInfo.Add(packetId);
+                    new Task(() => ResendReliable(new ReliablePacketInfo(eventId, flags, rawData, packetId))).Start();
+                }
             }
             catch (Exception ex)
             {
@@ -211,14 +252,44 @@ namespace NetworkingLibrary
             }
         }
 
-        protected virtual void PingEventHandler(UdpClient client) => Send(254);
+        internal async void ResendReliable(ReliablePacketInfo pi)
+        {
+            int resendAttempts = 0;
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(ReliableResendDelay));
+                if (!sentReliablePacketInfo.Contains(pi.PacketID))
+                    return;
 
-        protected virtual void DisconnectEventHandler(UdpClient client, bool remoteTrigger = false)
+                if (resendAttempts >= MaxResendAttempts)
+                {
+                    if (DisconnectOnFailedResponse)
+                        Close();
+                    return;
+                }
+
+                SendRaw(pi.EventID, pi.Flags & ~PacketFlags.Reliable, pi.PacketData);
+                resendAttempts++;
+            }
+        }
+
+
+        protected void PingEventHandler(UdpClient client) => SendF(0, PacketFlags.SystemMessage);
+
+        protected void DisconnectEventHandler(UdpClient client, bool remoteTrigger = false)
         {
             if (ClientDisconnected != null)
                 Array.ForEach(ClientDisconnected.GetInvocationList(), d => d.DynamicInvoke(this));
 
+            sentReliablePacketInfo.Clear();
+
             socket.Close();
+        }
+
+        protected void ReliableDataResponseReceived(UdpClient client, long packetID)
+        {
+            //if (sentReliablePacketInfo.Contains(packetID))
+            //    sentReliablePacketInfo.Remove(packetID);
         }
     }
 }

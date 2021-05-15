@@ -1,4 +1,21 @@
-﻿using NetworkingLibrary.Helpers.Conversion;
+﻿/*
+PACKET LAYOUT:
+
+HEADER: 12 BYTES
+
+0x00 1           EVENT_ID
+0x01 1           FLAGS
+0x02 8           PACKET_ID
+0x0A 2           DATA_LENGTH
+0x0C DATA_LENGTH DATA
+
+FLAGS:
+0b_0000_0000 None
+0b_0000_0001 Reliable
+0b_0000_0010 SystemMessage
+*/
+
+using NetworkingLibrary.Helpers.Conversion;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,6 +23,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Text;
 
 namespace NetworkingLibrary
 {
@@ -15,11 +33,15 @@ namespace NetworkingLibrary
         private readonly uint secret;
         protected Socket socket;
         protected Dictionary<byte, MethodInfo> netDataEvents = new Dictionary<byte, MethodInfo>();
+        protected Dictionary<byte, MethodInfo> systemDataEvents = new Dictionary<byte, MethodInfo>();
         protected EndPoint endPoint;
         protected ByteConverter converterInstance = new ByteConverter();
 
-        protected sbyte redundantId = 0;
-        protected List<sbyte> redundantIds = new List<sbyte>();
+        internal SortedSet<long> receivedReliablePacketInfo = new SortedSet<long>();
+        internal SortedSet<long> sentReliablePacketInfo = new SortedSet<long>();
+        public int MaxResendAttempts = 5;
+        public bool DisconnectOnFailedResponse = true;
+        public float ReliableResendDelay = 1.0f;
 
         public uint Secret => secret;
         public EndPoint EndPoint => endPoint;
@@ -88,20 +110,70 @@ namespace NetworkingLibrary
                 throw new Exception(msg);
         }
 
+        public static string PacketToStringRep(byte[] packet)
+        {
+            if (packet.Length < 12)
+                return "INVALID PACKET SIZE";
 
-        public void Send(byte packetId) => SendRaw(packetId, false, new byte[0]);
+            string retStr = "";
+            /* 0x00 1           EVENT_ID       */ retStr += $"{packet[0].ToString("X2")} ";
+            /* 0x01 1           FLAGS          */ retStr += $"{packet[1].ToString("X2")} ";
+            /* 0x02 8           PACKET_ID      */ retStr += $"{string.Join("", packet.Skip(2).Take(8).Select(x => x.ToString("X2")))} ";
+            /* 0x0A 2           DATA_LENGTH    */ retStr += $"{string.Join("", packet.Skip(10).Take(2).Select(x => x.ToString("X2")))} ";
+            /* 0x0C DATA_LENGTH DATA           */ retStr += string.Join("", packet.Skip(12).Select(x => x.ToString("X2")));
+
+            return retStr;
+        }
+
+
+        public void Send(byte packetId) => SendRaw(packetId, PacketFlags.None, new byte[0]);
 
         public void Send(byte packetId, params object[] data) => Send(packetId, new DynamicPacket(data));
 
-        public void Send(byte packetId, DynamicPacket packet) => SendRaw(packetId, false, packet.GetRawData(converterInstance));
+        public void Send(byte packetId, DynamicPacket packet) => SendRaw(packetId, PacketFlags.None, packet.GetRawData(converterInstance));
 
-        public void SendRedundant(byte packetId) => SendRaw(packetId, true, new byte[0]);
+        public void SendF(byte packetId, PacketFlags flags) => SendRaw(packetId, flags, new byte[0]);
 
-        public void SendRedundant(byte packetId, params object[] data) => SendRedundant(packetId, new DynamicPacket(data));
+        public void SendF(byte packetId, PacketFlags flags, params object[] data) => SendF(packetId, flags, new DynamicPacket(data));
 
-        public void SendRedundant(byte packetId, DynamicPacket packet) => SendRaw(packetId, true, packet.GetRawData(converterInstance));
+        public void SendF(byte packetId, PacketFlags flags, DynamicPacket packet) => SendRaw(packetId, flags, packet.GetRawData(converterInstance));
 
-        internal virtual void SendRaw(byte packetId, bool redundant, byte[] rawData)
-            => NetBase.WriteDebug("The inheriting class did not override this method! This is most certainly an oversight by the developer who created the inheriting class. (From NetBase)", true);
+        public abstract void SendRaw(byte packetId, PacketFlags flags, byte[] rawData);
+
+        public abstract void Close();
+
+        //protected abstract void ResendReliable(ReliablePacketInfo packetInfo);
+    }
+
+    [Flags]
+    public enum PacketFlags : byte
+    {
+        None          = 0b_0000_0000,
+        Reliable      = 0b_0000_0001,
+        SystemMessage = 0b_0000_0010,
+    }
+
+    public struct ReliablePacketInfo
+    {
+        public byte EventID;
+        public PacketFlags Flags;
+        public byte[] PacketData;
+        public long PacketID;
+
+        public ReliablePacketInfo(long packetId)
+        {
+            EventID = 0;
+            Flags = PacketFlags.None;
+            PacketID = packetId;
+            PacketData = new byte[0];
+        }
+
+        public ReliablePacketInfo(byte eventId, PacketFlags flags, byte[] packetData, long packetId)
+        {
+            EventID = eventId;
+            Flags = flags;
+            PacketID = packetId;
+            PacketData = packetData;
+        }
     }
 }
