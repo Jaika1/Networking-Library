@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NetworkingLibrary.Helpers.Conversion
+namespace Jaika1.Networking.Helpers.Conversion
 {
     public interface IByteConverterModule
     {

@@ -1,16 +1,18 @@
 # Jaika★'s Networking Library
-A UDP-based networking library based on the client-server model which has been designed to be as easy-to-use as is possible, while also targeting .NET Standard 2.0 by default to enable compatability with the Unity engine by simply dragging the assembly into the assets folder. The library also includes a basic handshake stage involving a pre-defined 'secret' known by both the server and client.
+A UDP/IP networking library based on the client-server model which has been designed to be as easy-to-use as is possible, while also targeting .NET Standard 2.0 by default to enable compatability with the Unity engine by simply dragging the assembly into the assets folder. The library also includes a basic handshake stage involving a pre-defined 'secret' known by both client and server, along with the ability to send unordered, self-recovering packets (Also known as "reliable UDP", [explained here](#using-reliable-packets)).
 
 ## Examples and How-To
-The examples provided below should give you all the basic information you'll need to implement the library. Every type that you should need access to from this library can be found within the `NetworkingLibrary` namespace, with a reference to `System.Reflection` being required for setup, and `System.Net` for any scenario where you aren't testing on a single machine.
+The examples provided below should give you all the basic information you'll need to implement the library. Every type that you should need access to from this library can be found within the `Jaika1.Networking` namespace, with a reference to `System.Reflection` being required for setup, and `System.Net` for any scenario where you aren't testing on a single machine.
 
-The client and server types from this library both have a fixed buffer size and secret that can be modified. The buffer size should be adjusted if you plan on sending larger chunks of data in 1 packet (the default size for both ends is 1024). The secret is used when a client tries to verify with a server as a basic form of authenticity. The client sends across their secret to the server, the server compares this with their own and if they both match, the handshake succeeds. Because of this, the secret given to your clients and the server should be identical, or the server will refuse data received from them. By default, this value is set to 0.
+The client and server types from this library both have a fixed buffer size and secret that can be modified. The buffer size should be adjusted if you plan on sending larger chunks of data in 1 packet (the default size for both ends is 1024, of which 12 is always reserved for the packet header, granting 1012 usable bytes by default). The secret is used when a client tries to verify with a server as a basic form of authenticity. The client sends across their secret to the server, the server compares this with their own and if they both match, the handshake succeeds. Because of this, the secret given to your clients and the server should be identical, or the server will refuse the connection. By default, this value is set to 0.
+
+The behaviour of reliable data can be configured using the `MaxResendAttempts`, `DisconnectOnFailedResponse` and `ReliableResendDelay` fields that are exposed on every client and server instance.
 
 ### Setting up the server class
 
-To create a server, we will need to create an instance of `NetworkingLibrary.UdpServer`, feed it a list of event handling methods from a `System.Reflection.Assembly` instance, then start the server on the user specified end-point.
+To create a server, we will need to create an instance of `Jaika1.Networking.UdpServer`, feed it a list of event handling methods from a `System.Reflection.Assembly` instance, then start the server on the user specified end-point.
 
-Initializing an instance of `NetworkingLibrary.UdpServer` is extremely simple, as every parameter in the types constructor has a default value. You can choose to override these however you'd like to.
+Initializing an instance of `Jaika1.Networking.UdpServer` is extremely simple, as every parameter in the types constructor has a default value. You can choose to override these however you'd like to.
 
 ```cs
 // Default initialization without any changes, giving us a buffer size of 1024 bytes and making our secret 0
@@ -69,7 +71,7 @@ And that's all the basics to cover with server setup! There where a few instance
 using System;
 using System.Reflection;
 using System.Threading;
-using NetworkingLibrary;
+using Jaika1.Networking;
 
 class Program
 {
@@ -104,9 +106,9 @@ The next section will cover setting up our client application.
 
 ### Setting up the client class
 
-Now that we have our server out of the way, we'll need to create a client to connect to it. It would be pretty lonely without one, after all! Similarly to the server, we will need to create an instance of `NetworkingLibrary.UdpClient`, feed it a list of event handling methods from a `System.Reflection.Assembly` instance, then try to verify with a server at a given remote end-point.
+Now that we have our server out of the way, we'll need to create a client to connect to it. It would be pretty lonely without one, after all! Similarly to the server, we will need to create an instance of `Jaika1.Networking.UdpClient`, feed it a list of event handling methods from a `System.Reflection.Assembly` instance, then try to verify with a server at a given remote end-point.
 
-Initializing an instance of `NetworkingLibrary.UdpClient` is virtually identical to `NetworkingLibrary.UdpServer`.
+Initializing an instance of `Jaika1.Networking.UdpClient` is virtually identical to `Jaika1.Networking.UdpServer`.
 
 ```cs
 // Default initialization without any changes, giving us a buffer size of 1024 bytes and making our secret 0
@@ -159,7 +161,7 @@ To once again recap all of what we just went through for those following along, 
 using System;
 using System.Reflection;
 using System.Threading;
-using NetworkingLibrary;
+using Jaika1.Networking;
 
 class Program
 {
@@ -208,9 +210,9 @@ Before reading through this section, I'd strongly reccommend that you should alr
 
 Up to now, setup has been relatively simple! Here is where it may get ever so slightly more confusing at first for some, but all-in-all this shouldn't be too hard to implement, even if you don't fully understand why it works as of now. 
 
-To mark methods as network events to be held by the client or server, we will be using the `NetworkingLibrary.NetDataEventAttribute` attribute. If you've never used attributes before, that's OK! This example should give you enough information to use them for this library.
+To mark methods as network events to be held by the client or server, we will be using the `Jaika1.Networking.NetDataEventAttribute` attribute. If you've never used attributes before, that's OK! This example should give you enough information to use them for this library.
 
-First, we need to create a ***static*** method, where the ***first parameter*** is an inheritor of `NetworkingLibrary.NetBase`. At the moment, the value parsed into here will only be of type `NetworkingLibrary.UdpClient`, so we shall specify that instead (NetBase is used internally for potential future expansion). The methods return type should be void, although you can make it whatever you want without issue, since the library will never touch the result.
+First, we need to create a ***static*** method, where the ***type of the first parameter*** inherits `Jaika1.Networking.NetBase`. At the moment, the value parsed into here will only be of type `Jaika1.Networking.UdpClient`, so we shall specify that instead (NetBase is used internally for potential future expansion). The methods return type should be void, although you can make it whatever you want without issue, since the library will never touch the result.
 
 ```cs
 static void PrintPong(UdpClient client)
@@ -219,7 +221,7 @@ static void PrintPong(UdpClient client)
 }
 ```
 
-Next, we will need to give this method our attribute. Due to how C# works, you should be able to exclude `Attribute` from the type name when implementing it, just to help clarify the code below.
+Next, we will need to give this method our attribute. Due to how C# works, you can exclude `Attribute` from the type name when declaring it, as is clarified in the code below.
 
 ```cs
 [NetDataEvent(0, 0)]
@@ -237,7 +239,7 @@ To make more sense out of this, lets finally complete our minimalistic applicati
 using System;
 using System.Reflection;
 using System.Threading;
-using NetworkingLibrary;
+using Jaika1.Networking;
 
 class Program
 {
@@ -317,7 +319,22 @@ static void ExampleMethod2(UdpClient sender, int i1, int i2)
 }
 ```
 
+## Extended knowledge
+
+### Using reliable packets
+One very useful feature that this library offers is the ability to send data reliably over the network. Any instance that inherits `Jaika1.Networking.NetBase` will have access to a set of fields and methods that grants quick and easy access to these features of the library.
+
+To send reliable data either way, use the `NetBase.SendF()` method. This method has a virtually identical layout to `NetBase.Send()`, along with appropriate overloads to go, with the one addition being the inclusion of a `Jaika1.Networking.PacketFlags flags` parameter. To send reliable data down the network, simply call any overload of the `NetBase.SendF()` function with the `PacketFlags.Reliable` flag set.
+
+***NetBase instance Fields***
+ - **`int MaxResendAttempts = 10`** - Determines how many times dropped data will be resent before giving up.
+ - **`bool DisconnectOnFailedResponse = true`** - If true, will disconnect the client if the maximum number of resend attempts is met, otherwise just stop sending the packet.
+ - **`float ReliableResendDelay = 0.25f`** - The delay before a reliable packet is resent if no response is received.
+
+ ### Simulating packet-loss
+ If for any reason you need to simulate packet-loss, it can be done for any `UdpClient` instance by changing the `DropChance` field. A value of `0.0f` means no packets will ever be lost, and `1.0f` means all packets will be lost. *Please note that this functionality is omitted for release builds for optimized performance.*
+
+
 ## W.I.P Features
 - Document ***everything*** with XML and create library documentation via the use of doxygen
-- Find a way to forcibly stop all asynchronous tasks when the client and server are closed for cleaner shutdown.
-- Add Enums, Structs and 1D Arrays of supported types to the supported auto-conversion list
+- Use a `CancellationToken` to forcibly stop all asynchronous tasks when the client and/or server are closed for a cleaner shutdown.

@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace NetworkingLibrary.Helpers
+namespace Jaika1.Networking.Helpers
 {
     public static class MethodInfoHelper
     {

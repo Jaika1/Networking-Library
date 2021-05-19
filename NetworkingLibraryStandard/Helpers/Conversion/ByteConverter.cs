@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace NetworkingLibrary.Helpers.Conversion
+namespace Jaika1.Networking.Helpers.Conversion
 {
     public class ByteConverter
     {

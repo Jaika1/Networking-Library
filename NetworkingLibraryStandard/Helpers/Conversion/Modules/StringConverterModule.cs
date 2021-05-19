@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace NetworkingLibrary.Helpers.Conversion.Modules
+namespace Jaika1.Networking.Helpers.Conversion.Modules
 {
     public class StringConverterModule : IByteConverterModule
     {

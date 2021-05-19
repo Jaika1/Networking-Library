@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NetworkingLibrary.Helpers.Conversion.Modules
+namespace Jaika1.Networking.Helpers.Conversion.Modules
 {
     public class DecimalConverterModule : IByteConverterModule
     {

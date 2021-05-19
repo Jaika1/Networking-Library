@@ -15,7 +15,7 @@ FLAGS:
 0b_0000_0010 SystemMessage
 */
 
-using NetworkingLibrary.Helpers.Conversion;
+using Jaika1.Networking.Helpers.Conversion;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,7 +25,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 
-namespace NetworkingLibrary
+namespace Jaika1.Networking
 {
     public abstract class NetBase
     {

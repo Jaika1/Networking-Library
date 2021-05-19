@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
 
-namespace NetworkingLibrary
+namespace Jaika1.Networking
 {
     public struct SocketConfiguration
     {

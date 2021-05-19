@@ -1,4 +1,4 @@
-﻿using NetworkingLibrary.Helpers.Conversion;
+﻿using Jaika1.Networking.Helpers.Conversion;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
-namespace NetworkingLibrary
+namespace Jaika1.Networking
 {
     public class DynamicPacket
     {

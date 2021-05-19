@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace NetworkingLibrary.Helpers.Conversion.Modules
+namespace Jaika1.Networking.Helpers.Conversion.Modules
 {
     public class EnumConverterModule : IByteConverterModule
     {

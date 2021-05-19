@@ -1,4 +1,4 @@
-﻿using NetworkingLibrary.Helpers;
+﻿using Jaika1.Networking.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +8,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace NetworkingLibrary
+namespace Jaika1.Networking
 {
     public class UdpServer : NetBase
     {
