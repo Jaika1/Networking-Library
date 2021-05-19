@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Jaika1.Networking</RootNamespace>
+    <AssemblyName>Jaika1.Networking</AssemblyName>
   </PropertyGroup>
 
 </Project>
