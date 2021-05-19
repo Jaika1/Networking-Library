@@ -106,6 +106,11 @@ namespace NetworkingLibrary
                         return;
                     }
                     UdpClient rCl = new UdpClient(socket, clientEndPoint);
+
+                    rCl.ReliableResendDelay = this.ReliableResendDelay;
+                    rCl.MaxResendAttempts = this.MaxResendAttempts;
+                    rCl.DisconnectOnFailedResponse = this.DisconnectOnFailedResponse;
+
                     rCl.SendRaw(254, PacketFlags.None, BitConverter.GetBytes(Secret));
                     clientList.Add(rCl);
 
@@ -179,13 +184,13 @@ namespace NetworkingLibrary
             }
         }
 
-        public override void SendRaw(byte packetId, PacketFlags flags, byte[] rawData)
+        public override void SendRaw(byte packetId, PacketFlags flags, byte[] rawData, long? presetPacketId = null)
         {
             for (int i = 0; i < clientList.Count; ++i)
             {
                 try
                 {
-                    clientList[i].SendRaw(packetId, flags, rawData);
+                    clientList[i].SendRaw(packetId, flags, rawData, presetPacketId);
                 }
                 catch (Exception ex)
                 {
@@ -217,8 +222,8 @@ namespace NetworkingLibrary
 
         protected void ReliableDataResponseReceived(UdpClient client, long packetID)
         {
-            //if (client.sentReliablePacketInfo.Contains(packetID))
-            //    client.sentReliablePacketInfo.Remove(packetID);
+            if (client.sentReliablePacketInfo.Contains(packetID))
+                client.sentReliablePacketInfo.Remove(packetID);
         }
     }
 }

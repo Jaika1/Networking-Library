@@ -108,9 +108,13 @@ namespace NetworkingLibrary
 
         public override void Close()
         {
-            SendF(1, PacketFlags.SystemMessage, true);
+            try
+            {
+                SendF(1, PacketFlags.SystemMessage, true);
+            } 
+            catch { }
 
-            if (socket != null)
+            //if (socket != null)
                 DisconnectEventHandler(this);
         }
 
@@ -125,6 +129,10 @@ namespace NetworkingLibrary
                 if (DropChance < rand.NextDouble())
                 {
                     _ = ProcessData(dataBuffer.Take(i).ToArray());
+                }
+                else
+                {
+                    Console.WriteLine("Packet Dropped...");
                 }
 #else
                 _ = ProcessData(dataBuffer.Take(i).ToArray());
@@ -143,6 +151,7 @@ namespace NetworkingLibrary
             catch (Exception ex)
             {
                 NetBase.WriteDebug(ex.ToString());
+                Close();
             }
         }
 
@@ -222,10 +231,10 @@ namespace NetworkingLibrary
             }
         }
 
-        public override void SendRaw(byte eventId, PacketFlags flags, byte[] rawData)
+        public override void SendRaw(byte eventId, PacketFlags flags, byte[] rawData, long? presetPacketId = null)
         {
             byte[] buffer = new byte[12 + rawData.Length];
-            long packetId = DateTime.UtcNow.Ticks;
+            long packetId = presetPacketId.HasValue ? presetPacketId.Value : DateTime.UtcNow.Ticks;
 
             // PACKET HEADER CONSTRUCTION: 12 BYTES
             /* 0x00 1           EVENT_ID    */ buffer[0] = eventId;
@@ -240,7 +249,7 @@ namespace NetworkingLibrary
                 socket.BeginSendTo(buffer, 0, buffer.Length, SocketFlags.None, endPoint, new AsyncCallback(SendToEvent), null);
                 NetBase.WriteDebug($"Send data to {IPEndPoint}: {PacketToStringRep(buffer)}");
 
-                if (flags.HasFlag(PacketFlags.Reliable))
+                if (flags.HasFlag(PacketFlags.Reliable) && !flags.HasFlag(PacketFlags.ReservedA))
                 {
                     sentReliablePacketInfo.Add(packetId);
                     new Task(() => ResendReliable(new ReliablePacketInfo(eventId, flags, rawData, packetId))).Start();
@@ -268,7 +277,8 @@ namespace NetworkingLibrary
                     return;
                 }
 
-                SendRaw(pi.EventID, pi.Flags & ~PacketFlags.Reliable, pi.PacketData);
+                //PacketFlags nFlags = pi.Flags & ~PacketFlags.Reliable;
+                SendRaw(pi.EventID, pi.Flags | PacketFlags.ReservedA, pi.PacketData, pi.PacketID);
                 resendAttempts++;
             }
         }
@@ -288,8 +298,8 @@ namespace NetworkingLibrary
 
         protected void ReliableDataResponseReceived(UdpClient client, long packetID)
         {
-            //if (sentReliablePacketInfo.Contains(packetID))
-            //    sentReliablePacketInfo.Remove(packetID);
+            if (sentReliablePacketInfo.Contains(packetID))
+                sentReliablePacketInfo.Remove(packetID);
         }
     }
 }

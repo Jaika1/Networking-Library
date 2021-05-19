@@ -39,9 +39,9 @@ namespace NetworkingLibrary
 
         internal SortedSet<long> receivedReliablePacketInfo = new SortedSet<long>();
         internal SortedSet<long> sentReliablePacketInfo = new SortedSet<long>();
-        public int MaxResendAttempts = 5;
+        public int MaxResendAttempts = 10;
         public bool DisconnectOnFailedResponse = true;
-        public float ReliableResendDelay = 1.0f;
+        public float ReliableResendDelay = 0.25f;
 
         public uint Secret => secret;
         public EndPoint EndPoint => endPoint;
@@ -138,7 +138,7 @@ namespace NetworkingLibrary
 
         public void SendF(byte packetId, PacketFlags flags, DynamicPacket packet) => SendRaw(packetId, flags, packet.GetRawData(converterInstance));
 
-        public abstract void SendRaw(byte packetId, PacketFlags flags, byte[] rawData);
+        public abstract void SendRaw(byte packetId, PacketFlags flags, byte[] rawData, long? presetPacketId = null);
 
         public abstract void Close();
 
@@ -151,6 +151,7 @@ namespace NetworkingLibrary
         None          = 0b_0000_0000,
         Reliable      = 0b_0000_0001,
         SystemMessage = 0b_0000_0010,
+        ReservedA     = 0b_1000_0000
     }
 
     public struct ReliablePacketInfo
