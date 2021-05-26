@@ -26,7 +26,7 @@ namespace Jaika1.Networking
         public event Action<UdpClient> ClientDisconnected;
 
 
-        public UdpClient(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret)
+        public UdpClient(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret, bufferSize)
         {
             this.bufferSize = bufferSize;
             systemDataEvents.Add(0, MethodInfoHelper.GetMethodInfo<UdpClient>(x => x.PingEventHandler(null)));
@@ -182,7 +182,11 @@ namespace Jaika1.Networking
                 {
                     if (packetFlags.HasFlag(PacketFlags.Reliable))
                         if (!receivedReliablePacketInfo.Contains(packetId))
+                        {
+                            receivedReliableDataMutex.WaitOne();
                             receivedReliablePacketInfo.Add(packetId);
+                            receivedReliableDataMutex.ReleaseMutex();
+                        }
 
                     lastMessageReceived = DateTime.UtcNow;
 
@@ -251,7 +255,9 @@ namespace Jaika1.Networking
 
                 if (flags.HasFlag(PacketFlags.Reliable) && !flags.HasFlag(PacketFlags.ReservedA))
                 {
+                    sentReliableDataMutex.WaitOne();
                     sentReliablePacketInfo.Add(packetId);
+                    sentReliableDataMutex.ReleaseMutex();
                     new Task(() => ResendReliable(new ReliablePacketInfo(eventId, flags, rawData, packetId))).Start();
                 }
             }
@@ -291,15 +297,19 @@ namespace Jaika1.Networking
             if (ClientDisconnected != null)
                 Array.ForEach(ClientDisconnected.GetInvocationList(), d => d.DynamicInvoke(this));
 
+            sentReliableDataMutex.WaitOne();
             sentReliablePacketInfo.Clear();
+            sentReliableDataMutex.ReleaseMutex();
 
             socket.Close();
         }
 
         protected void ReliableDataResponseReceived(UdpClient client, long packetID)
         {
+            sentReliableDataMutex.WaitOne();
             if (sentReliablePacketInfo.Contains(packetID))
                 sentReliablePacketInfo.Remove(packetID);
+            sentReliableDataMutex.ReleaseMutex();
         }
     }
 }

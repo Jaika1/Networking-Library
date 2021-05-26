@@ -24,6 +24,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace Jaika1.Networking
 {
@@ -37,6 +38,8 @@ namespace Jaika1.Networking
         protected EndPoint endPoint;
         protected ByteConverter converterInstance = new ByteConverter();
 
+        internal Mutex sentReliableDataMutex = new Mutex();
+        internal Mutex receivedReliableDataMutex = new Mutex();
         internal SortedSet<long> receivedReliablePacketInfo = new SortedSet<long>();
         internal SortedSet<long> sentReliablePacketInfo = new SortedSet<long>();
         public int MaxResendAttempts = 10;
@@ -50,12 +53,14 @@ namespace Jaika1.Networking
 
         public static event Action<string> DebugInfoReceived;
 
-        public NetBase(SocketConfiguration socketConfig, uint secret = 0)
+        public NetBase(SocketConfiguration socketConfig, uint secret = 0, int bufferSize = 1024)
         {
             this.secret = secret;
             socketConfiguration = socketConfig;
             socket = new Socket(socketConfig.AddressFamily, socketConfig.SocketType, socketConfig.ProtocolType);
             socket.ReceiveTimeout = 10000;
+            socket.ReceiveBufferSize = bufferSize;
+            socket.SendBufferSize = bufferSize;
         }
 
         public void Reset()

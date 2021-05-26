@@ -26,7 +26,7 @@ namespace Jaika1.Networking
         public IReadOnlyList<UdpClient> Clients => clientList;
 
 
-        public UdpServer(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret)
+        public UdpServer(uint secret = 0, int bufferSize = 1024) : base(SocketConfiguration.UdpConfiguration, secret, bufferSize)
         {
             this.bufferSize = bufferSize;
             systemDataEvents.Add(0, MethodInfoHelper.GetMethodInfo<UdpServer>(x => x.PingEventHandler(null)));
@@ -141,7 +141,11 @@ namespace Jaika1.Networking
                     {
                         if (packetFlags.HasFlag(PacketFlags.Reliable))
                             if (!clientRef.receivedReliablePacketInfo.Contains(packetId))
+                            {
+                                clientRef.receivedReliableDataMutex.WaitOne();
                                 clientRef.receivedReliablePacketInfo.Add(packetId);
+                                clientRef.receivedReliableDataMutex.ReleaseMutex();
+                            }
 
                         clientRef.lastMessageReceived = DateTime.UtcNow;
 
@@ -214,7 +218,10 @@ namespace Jaika1.Networking
             if (cIndex > -1)
                 clientList.RemoveAt(cIndex);
 
+            client.sentReliableDataMutex.WaitOne();
             client.sentReliablePacketInfo.Clear();
+            client.sentReliableDataMutex.ReleaseMutex();
+
 
             if (ClientDisconnected != null)
                 Array.ForEach(ClientDisconnected.GetInvocationList(), d => d.DynamicInvoke(client));
@@ -222,8 +229,10 @@ namespace Jaika1.Networking
 
         protected void ReliableDataResponseReceived(UdpClient client, long packetID)
         {
+            client.sentReliableDataMutex.WaitOne();
             if (client.sentReliablePacketInfo.Contains(packetID))
                 client.sentReliablePacketInfo.Remove(packetID);
+            client.sentReliableDataMutex.ReleaseMutex();
         }
     }
 }
