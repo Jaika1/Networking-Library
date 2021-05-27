@@ -59,7 +59,7 @@ namespace Jaika1.Networking
         {
             for (int i = 0; i < clientList.Count; ++i)
             {
-                DisconnectEventHandler(clientList[0]);
+                clientList[i].Close();
             }
 
             cancellationToken.Cancel();
@@ -70,15 +70,21 @@ namespace Jaika1.Networking
 
         private void DataReceivedEvent(IAsyncResult ar)
         {
+            EndPoint ep = new IPEndPoint(IPAddress.Any, 0);
             try
             {
-                EndPoint ep = new IPEndPoint(IPAddress.Any, 0);
                 int i = socket.EndReceiveFrom(ar, ref ep);
-                new Task(async () => await ProcessData(dataBuffer.Take(i).ToArray(), ep)).Start();
+                byte[] buffer = dataBuffer.Take(i).ToArray();
+                new Task(async () => await ProcessData(buffer, ep), cancellationToken.Token).Start();
             }
             catch (Exception ex)
             {
                 NetBase.WriteDebug(ex.ToString());
+
+                UdpClient eCl = clientList.Find(c => c.EndPoint.Equals(ep));
+                if (eCl != null)
+                    eCl.Close();
+                return;
             }
 
             dataBuffer = new byte[bufferSize];
@@ -89,6 +95,9 @@ namespace Jaika1.Networking
             catch (Exception ex)
             {
                 NetBase.WriteDebug(ex.ToString());
+                UdpClient eCl = clientList.Find(c => c.EndPoint.Equals(ep));
+                if (eCl != null)
+                    eCl.Close();
             }
         }
 

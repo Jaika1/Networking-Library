@@ -11,7 +11,7 @@ class Program
 {
     private static void Main()
     {
-        NetBase.DebugInfoReceived += (i) => Console.WriteLine(i);
+        //NetBase.DebugInfoReceived += (i) => Console.WriteLine(i);
 
         UdpServer sv = new UdpServer();
         sv.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly());
@@ -23,7 +23,7 @@ class Program
         {
             UdpClient cl = new UdpClient();
 #if DEBUG
-            cl.DropChance = 1;
+            cl.DropChance = 0.01;
 #endif
 
             cl.AddNetEventsFromAssembly(Assembly.GetExecutingAssembly());

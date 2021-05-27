@@ -21,6 +21,7 @@ namespace Jaika1.Networking
         private byte[] dataBuffer;
         internal DateTime lastMessageReceived = DateTime.UtcNow;
         bool serverMode = false;
+        bool socketClosed = false;
 
         public float TimeoutDelay = 20.0f;
 
@@ -128,19 +129,19 @@ namespace Jaika1.Networking
             try
             {
                 int i = socket.EndReceive(ar);
-
+                byte[] buffer = dataBuffer.Take(i).ToArray();
 #if DEBUG
                 // Simulated packet loss
                 if (DropChance < rand.NextDouble())
                 {
-                    new Task(async () => await ProcessData(dataBuffer.Take(i).ToArray()), cancellationToken.Token).Start();
+                    new Task(async () => await ProcessData(buffer), cancellationToken.Token).Start();
                 }
                 else
                 {
                     Console.WriteLine("Packet Dropped...");
                 }
 #else
-                new Task(async () => await ProcessData(dataBuffer.Take(i).ToArray()), cancellationToken.Token).Start();
+                new Task(async () => await ProcessData(buffer), cancellationToken.Token).Start();
 #endif
             }
             catch (Exception ex)
@@ -306,8 +307,15 @@ namespace Jaika1.Networking
 
         protected void DisconnectEventHandler(UdpClient client, bool remoteTrigger = false)
         {
-            if (socket.Connected && serverMode == false)
-                socket.Close();
+            if (serverMode == false)
+            {
+                if (!socketClosed)
+                {
+                    socket.Close();
+                    socketClosed = true;
+                }
+                else return;
+            }
 
             if (ClientDisconnected != null)
                 Array.ForEach(ClientDisconnected.GetInvocationList(), d => d.DynamicInvoke(this));
