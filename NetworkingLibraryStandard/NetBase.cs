@@ -37,9 +37,12 @@ namespace Jaika1.Networking
         protected Dictionary<byte, MethodInfo> systemDataEvents = new Dictionary<byte, MethodInfo>();
         protected EndPoint endPoint;
         protected ByteConverter converterInstance = new ByteConverter();
+        protected CancellationTokenSource cancellationToken = new CancellationTokenSource();
 
-        internal Mutex sentReliableDataMutex = new Mutex();
-        internal Mutex receivedReliableDataMutex = new Mutex();
+        //internal Mutex sentReliableDataMutex = new Mutex();
+        //internal Mutex receivedReliableDataMutex = new Mutex();
+        internal object sentReliableDataLock = new object();
+        internal object receivedReliableDataLock = new object();
         internal SortedSet<long> receivedReliablePacketInfo = new SortedSet<long>();
         internal SortedSet<long> sentReliablePacketInfo = new SortedSet<long>();
         public int MaxResendAttempts = 10;

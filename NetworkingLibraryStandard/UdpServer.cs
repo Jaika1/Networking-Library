@@ -51,7 +51,7 @@ namespace Jaika1.Networking
                 NetBase.WriteDebug(ex.ToString());
                 return false;
             }
-            _ = PingLoop();
+            new Task(async () => await PingLoop(), cancellationToken.Token).Start();
             return true;
         }
 
@@ -59,8 +59,10 @@ namespace Jaika1.Networking
         {
             for (int i = 0; i < clientList.Count; ++i)
             {
-                DisconnectEventHandler(clientList[0], true);
+                DisconnectEventHandler(clientList[0]);
             }
+
+            cancellationToken.Cancel();
 
             socket.Close();
         }
@@ -72,7 +74,7 @@ namespace Jaika1.Networking
             {
                 EndPoint ep = new IPEndPoint(IPAddress.Any, 0);
                 int i = socket.EndReceiveFrom(ar, ref ep);
-                _ = ProcessData(dataBuffer.Take(i).ToArray(), ep);
+                new Task(async () => await ProcessData(dataBuffer.Take(i).ToArray(), ep)).Start();
             }
             catch (Exception ex)
             {
@@ -111,6 +113,7 @@ namespace Jaika1.Networking
                     rCl.MaxResendAttempts = this.MaxResendAttempts;
                     rCl.DisconnectOnFailedResponse = this.DisconnectOnFailedResponse;
 
+                    rCl.ClientDisconnected += c => DisconnectEventHandler(c);
                     rCl.SendRaw(254, PacketFlags.None, BitConverter.GetBytes(Secret));
                     clientList.Add(rCl);
 
@@ -142,9 +145,10 @@ namespace Jaika1.Networking
                         if (packetFlags.HasFlag(PacketFlags.Reliable))
                             if (!clientRef.receivedReliablePacketInfo.Contains(packetId))
                             {
-                                clientRef.receivedReliableDataMutex.WaitOne();
-                                clientRef.receivedReliablePacketInfo.Add(packetId);
-                                clientRef.receivedReliableDataMutex.ReleaseMutex();
+                                lock (clientRef.receivedReliableDataLock)
+                                {
+                                    clientRef.receivedReliablePacketInfo.Add(packetId);
+                                }
                             }
 
                         clientRef.lastMessageReceived = DateTime.UtcNow;
@@ -218,10 +222,10 @@ namespace Jaika1.Networking
             if (cIndex > -1)
                 clientList.RemoveAt(cIndex);
 
-            client.sentReliableDataMutex.WaitOne();
-            client.sentReliablePacketInfo.Clear();
-            client.sentReliableDataMutex.ReleaseMutex();
-
+            lock (client.sentReliableDataLock)
+            {
+                client.sentReliablePacketInfo.Clear();
+            }
 
             if (ClientDisconnected != null)
                 Array.ForEach(ClientDisconnected.GetInvocationList(), d => d.DynamicInvoke(client));
@@ -229,10 +233,11 @@ namespace Jaika1.Networking
 
         protected void ReliableDataResponseReceived(UdpClient client, long packetID)
         {
-            client.sentReliableDataMutex.WaitOne();
-            if (client.sentReliablePacketInfo.Contains(packetID))
-                client.sentReliablePacketInfo.Remove(packetID);
-            client.sentReliableDataMutex.ReleaseMutex();
+            lock (client.sentReliableDataLock)
+            {
+                if (client.sentReliablePacketInfo.Contains(packetID))
+                    client.sentReliablePacketInfo.Remove(packetID);
+            }
         }
     }
 }

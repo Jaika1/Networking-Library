@@ -20,6 +20,7 @@ namespace Jaika1.Networking
         private int bufferSize;
         private byte[] dataBuffer;
         internal DateTime lastMessageReceived = DateTime.UtcNow;
+        bool serverMode = false;
 
         public float TimeoutDelay = 20.0f;
 
@@ -38,6 +39,7 @@ namespace Jaika1.Networking
         {
             socket = serverSocket;
             endPoint = clientEp;
+            serverMode = true;
         }
 
         public bool VerifyAndListen(int port) => VerifyAndListen(IPAddress.Loopback, port);
@@ -80,12 +82,12 @@ namespace Jaika1.Networking
                             NetBase.WriteDebug(ex.ToString());
                             return false;
                         }
-                        _ = TimeoutLoop();
+                        new Task(async () => await TimeoutLoop(), cancellationToken.Token).Start();
 
                         // Process the non-verif data received beforehand
                         nonData.ForEach(d =>
                         {
-                            _ = ProcessData(d);
+                            new Task(async () => await ProcessData(d), cancellationToken.Token).Start();
                         });
 
                         return true;
@@ -108,14 +110,17 @@ namespace Jaika1.Networking
 
         public override void Close()
         {
-            try
-            {
-                SendF(1, PacketFlags.SystemMessage, true);
-            } 
-            catch { }
+            cancellationToken.Cancel();
+
+            DisconnectEventHandler(this);
+
+            //try
+            //{
+            //    SendF(1, PacketFlags.SystemMessage, true);
+            //} 
+            //catch { }
 
             //if (socket != null)
-                DisconnectEventHandler(this);
         }
 
         private void DataReceivedEvent(IAsyncResult ar)
@@ -128,19 +133,21 @@ namespace Jaika1.Networking
                 // Simulated packet loss
                 if (DropChance < rand.NextDouble())
                 {
-                    _ = ProcessData(dataBuffer.Take(i).ToArray());
+                    new Task(async () => await ProcessData(dataBuffer.Take(i).ToArray()), cancellationToken.Token).Start();
                 }
                 else
                 {
                     Console.WriteLine("Packet Dropped...");
                 }
 #else
-                _ = ProcessData(dataBuffer.Take(i).ToArray());
+                new Task(async () => await ProcessData(dataBuffer.Take(i).ToArray()), cancellationToken.Token).Start();
 #endif
             }
             catch (Exception ex)
             {
                 NetBase.WriteDebug(ex.ToString());
+                Close();
+                return;
             }
 
             dataBuffer = new byte[bufferSize];
@@ -181,12 +188,15 @@ namespace Jaika1.Networking
                 if (eventsRef.ContainsKey(eventId) && !receivedReliablePacketInfo.Contains(packetId))
                 {
                     if (packetFlags.HasFlag(PacketFlags.Reliable))
+                    {
                         if (!receivedReliablePacketInfo.Contains(packetId))
                         {
-                            receivedReliableDataMutex.WaitOne();
-                            receivedReliablePacketInfo.Add(packetId);
-                            receivedReliableDataMutex.ReleaseMutex();
+                            lock (receivedReliableDataLock)
+                            {
+                                receivedReliablePacketInfo.Add(packetId);
+                            }
                         }
+                    }
 
                     lastMessageReceived = DateTime.UtcNow;
 
@@ -218,6 +228,7 @@ namespace Jaika1.Networking
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+                Close();
             }
         }
 
@@ -255,9 +266,10 @@ namespace Jaika1.Networking
 
                 if (flags.HasFlag(PacketFlags.Reliable) && !flags.HasFlag(PacketFlags.ReservedA))
                 {
-                    sentReliableDataMutex.WaitOne();
-                    sentReliablePacketInfo.Add(packetId);
-                    sentReliableDataMutex.ReleaseMutex();
+                    lock (sentReliableDataLock)
+                    {
+                        sentReliablePacketInfo.Add(packetId);
+                    }
                     new Task(() => ResendReliable(new ReliablePacketInfo(eventId, flags, rawData, packetId))).Start();
                 }
             }
@@ -294,22 +306,25 @@ namespace Jaika1.Networking
 
         protected void DisconnectEventHandler(UdpClient client, bool remoteTrigger = false)
         {
+            if (socket.Connected && serverMode == false)
+                socket.Close();
+
             if (ClientDisconnected != null)
                 Array.ForEach(ClientDisconnected.GetInvocationList(), d => d.DynamicInvoke(this));
 
-            sentReliableDataMutex.WaitOne();
-            sentReliablePacketInfo.Clear();
-            sentReliableDataMutex.ReleaseMutex();
-
-            socket.Close();
+            lock (sentReliableDataLock)
+            {
+                sentReliablePacketInfo.Clear();
+            }
         }
 
         protected void ReliableDataResponseReceived(UdpClient client, long packetID)
         {
-            sentReliableDataMutex.WaitOne();
-            if (sentReliablePacketInfo.Contains(packetID))
-                sentReliablePacketInfo.Remove(packetID);
-            sentReliableDataMutex.ReleaseMutex();
+            lock (sentReliableDataLock)
+            {
+                if (sentReliablePacketInfo.Contains(packetID))
+                    sentReliablePacketInfo.Remove(packetID);
+            }
         }
     }
 }
