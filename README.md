@@ -1,3 +1,5 @@
+# [Deprecated, please use this instead!](https://github.com/Jaika1/JaikasToolkit)
+
 # Jaika★'s Networking Library
 A UDP/IP networking library based on the client-server model which has been designed to be as easy-to-use as is possible, while also targeting .NET Standard 2.0 by default to enable compatability with the Unity engine by simply dragging the assembly into the assets folder. The library also includes a basic handshake stage involving a pre-defined 'secret' known by both client and server, along with the ability to send unordered, self-recovering packets (Also known as "reliable UDP", [explained here](#using-reliable-packets)).
 
